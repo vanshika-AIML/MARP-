@@ -1,0 +1,91 @@
+@import './marp-themes.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-app: #f8fafc;
+    --bg-surface: #ffffff;
+    --border-subtle: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --accent: #0284c7;
+    --accent-hover: #0369a1;
+  }
+
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom Clean Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+/* CodeMirror Custom Tweaks for Developer Tool Look */
+.cm-editor {
+  height: 100% !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 13.5px !important;
+  background-color: #ffffff !important;
+}
+
+.cm-editor .cm-scroller {
+  padding-top: 8px;
+  padding-bottom: 32px;
+  line-height: 1.6;
+}
+
+.cm-editor.cm-focused {
+  outline: none !important;
+}
+
+.cm-editor .cm-gutters {
+  background-color: #f8fafc !important;
+  color: #94a3b8 !important;
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+.cm-editor .cm-activeLineGutter {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.cm-editor .cm-activeLine {
+  background-color: #f1f5f9 !important;
+}
+
+/* MARP Slide Preview Container Transitions */
+.slide-transition {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+/* Fullscreen Slide mode */
+.presentation-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background-color: #090d16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

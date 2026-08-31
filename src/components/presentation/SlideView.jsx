@@ -11,7 +11,7 @@ import React, { useMemo } from 'react';
 /**
  * Basic safe markdown-to-html compiler tailored for MARP slides
  */
-function renderSlideMarkdownToHtml(markdown = '') {
+export function renderSlideMarkdownToHtml(markdown = '') {
   if (!markdown) return '';
 
   let html = markdown;

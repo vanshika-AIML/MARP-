@@ -135,6 +135,9 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate }) {
         onZoomIn={() => setPreviewStatus({ zoom: Math.min(1.5, (previewStatus.zoom || 1.0) + 0.1) })}
         onZoomOut={() => setPreviewStatus({ zoom: Math.max(0.6, (previewStatus.zoom || 1.0) - 0.1) })}
         onZoomReset={() => setPreviewStatus({ zoom: 1.0 })}
+        wsStatus={wsStatus}
+        onSimulateStream={simulateGenerationStream}
+        onApplyMarkdown={handleApplyAiGeneratedMarkdown}
       />
 
       {/* Bottom Status Bar */}

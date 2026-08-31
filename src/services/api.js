@@ -57,7 +57,12 @@ class ApiClient {
       if (contentType && contentType.includes('application/json')) {
         return await response.json();
       }
-      if (contentType && (contentType.includes('text/') || contentType.includes('application/pdf'))) {
+      if (contentType && (
+        contentType.includes('text/') ||
+        contentType.includes('application/pdf') ||
+        contentType.includes('application/octet-stream') ||
+        contentType.includes('application/vnd.openxmlformats-officedocument')
+      )) {
         return await response.blob();
       }
       return await response.text();

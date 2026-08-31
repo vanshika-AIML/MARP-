@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { FileCode, FileText, Printer, Presentation, Check, Download } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
-import { downloadMarkdownFile, downloadHtmlPresentation, triggerPrintToPdf } from '../../utils/exportHelpers';
+import { downloadMarkdownFile, downloadHtmlPresentation, triggerPrintToPdf, downloadExportResult } from '../../utils/exportHelpers';
 import { presentationService } from '../../services/presentationService';
 
 export function ExportModal({
@@ -29,20 +29,20 @@ export function ExportModal({
         setSuccessMsg('Markdown file downloaded successfully!');
       } else if (exportFormat === 'html') {
         // Collect slide HTML
-        const slideNodes = presentation.slides.map((s, idx) => {
-          return `<div class="slide-page marp-theme-${presentation.theme || 'default'}">${s.content}</div>`;
-        }).join('\n');
-        downloadHtmlPresentation(presentation.title, slideNodes, presentation.theme);
+        downloadHtmlPresentation(presentation.title, presentation.slides, presentation.theme);
         setSuccessMsg('Portable HTML presentation downloaded!');
       } else if (exportFormat === 'pdf') {
+        triggerPrintToPdf(presentation.title, presentation.slides, presentation.theme);
+        setIsExporting(false);
         onClose();
-        setTimeout(() => {
-          triggerPrintToPdf();
-        }, 300);
         return;
       } else if (exportFormat === 'pptx') {
-        await presentationService.exportPresentation(presentation.id, 'pptx');
-        setSuccessMsg('PPTX generated and dispatched!');
+        const result = await presentationService.exportPresentation(presentation.id, 'pptx', {
+          markdown: presentation.markdown,
+          title: presentation.title,
+        });
+        await downloadExportResult(result, presentation.title, 'pptx');
+        setSuccessMsg('PowerPoint file downloaded successfully!');
       }
 
       setTimeout(() => {

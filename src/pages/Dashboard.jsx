@@ -68,7 +68,12 @@ export function Dashboard({ onOpenDeck, onNewDeckWithTemplate }) {
   );
 
   return (
-    <div className="flex-1 bg-slate-50 overflow-y-auto p-6 md:p-10 text-left">
+    <div className="flex-1 bg-slate-50 overflow-y-auto text-left">
+      <div className="h-12 px-6 md:px-10 bg-white border-b border-slate-200/90 flex items-center gap-2">
+        <Presentation className="w-4 h-4 text-sky-600" />
+        <span className="text-xs font-bold text-slate-800">MARP Studio</span>
+      </div>
+      <div className="p-6 md:p-10">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Top Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -89,7 +94,7 @@ export function Dashboard({ onOpenDeck, onNewDeckWithTemplate }) {
               onClick={() => onNewDeckWithTemplate(null)}
               className="shadow-sm"
             >
-              Blank Presentation
+              Create New Presentation
             </Button>
           </div>
         </div>
@@ -244,6 +249,7 @@ export function Dashboard({ onOpenDeck, onNewDeckWithTemplate }) {
             </div>
           )}
         </section>
+      </div>
       </div>
     </div>
   );

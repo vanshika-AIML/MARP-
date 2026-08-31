@@ -8,6 +8,7 @@ import Sidebar from './Sidebar';
 import CodeMirrorEditor from '../editor/CodeMirrorEditor';
 import EditorToolbar from '../editor/EditorToolbar';
 import MarkdownPreview from '../editor/MarkdownPreview';
+import AIAgentPanel from '../editor/AIAgentPanel';
 
 export function Workspace({
   sidebarOpen,
@@ -34,6 +35,9 @@ export function Workspace({
   onZoomIn,
   onZoomOut,
   onZoomReset,
+  wsStatus,
+  onSimulateStream,
+  onApplyMarkdown,
 }) {
   return (
     <div className="flex-1 flex overflow-hidden relative">
@@ -82,19 +86,27 @@ export function Workspace({
               viewMode === 'split' ? 'w-1/2' : 'w-full'
             }`}
           >
-            <MarkdownPreview
-              slide={slides[activeSlide]}
-              slides={slides}
-              activeSlide={activeSlide}
-              theme={theme}
-              zoom={zoom}
-              onNextSlide={onNextSlide}
-              onPrevSlide={onPrevSlide}
-              onPresent={onPresent}
-              onZoomIn={onZoomIn}
-              onZoomOut={onZoomOut}
-              onZoomReset={onZoomReset}
-            />
+            {viewMode === 'split' ? (
+              <AIAgentPanel
+                onApplyMarkdown={onApplyMarkdown}
+                wsStatus={wsStatus}
+                onSimulateStream={onSimulateStream}
+              />
+            ) : (
+              <MarkdownPreview
+                slide={slides[activeSlide]}
+                slides={slides}
+                activeSlide={activeSlide}
+                theme={theme}
+                zoom={zoom}
+                onNextSlide={onNextSlide}
+                onPrevSlide={onPrevSlide}
+                onPresent={onPresent}
+                onZoomIn={onZoomIn}
+                onZoomOut={onZoomOut}
+                onZoomReset={onZoomReset}
+              />
+            )}
           </div>
         )}
       </main>

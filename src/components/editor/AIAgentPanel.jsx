@@ -18,13 +18,13 @@ export function AIAgentPanel({ onApplyMarkdown, wsStatus, onSimulateStream }) {
     setIsSubmitting(true);
     setError(null);
     try {
-      if (onSimulateStream) {
+      if (wsStatus !== 'connected' && onSimulateStream) {
         await onSimulateStream(prompt, (markdown) => {
           onApplyMarkdown(markdown, generationType === 'deck');
         }, () => {
           setIsSubmitting(false);
           setPrompt('');
-        });
+        }, generationType);
       } else {
         const result = generationType === 'slide'
           ? await agentService.generateSlide(prompt)
@@ -46,8 +46,8 @@ export function AIAgentPanel({ onApplyMarkdown, wsStatus, onSimulateStream }) {
         <div className="flex items-center gap-2">
           <Bot className="w-4 h-4 text-sky-600" />
           <h2 className="text-sm font-semibold text-slate-900">AI Presentation Agent</h2>
-          <Badge variant={wsStatus === 'connected' ? 'green' : 'slate'} dot size="xs">
-            {wsStatus === 'connected' ? 'Live' : 'Ready'}
+          <Badge variant={wsStatus === 'connected' ? 'green' : wsStatus === 'connecting' ? 'amber' : 'slate'} dot size="xs">
+            {wsStatus === 'connected' ? 'Connected' : wsStatus === 'connecting' ? 'Connecting' : 'Offline'}
           </Badge>
         </div>
         <p className="text-xs text-slate-500 mt-1">Describe a slide or a complete deck to generate.</p>

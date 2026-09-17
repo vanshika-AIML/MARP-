@@ -38,7 +38,7 @@ export function GenerationOverlay({
     setError(null);
 
     try {
-      if (onSimulateStream) {
+      if (wsStatus !== 'connected' && onSimulateStream) {
         // Run simulated streaming WebSocket demo
         await onSimulateStream(
           prompt,
@@ -53,7 +53,8 @@ export function GenerationOverlay({
               onClose();
               setPrompt('');
             }, 1000);
-          }
+          },
+          generationType
         );
       } else {
         // Direct Service invocation fallback

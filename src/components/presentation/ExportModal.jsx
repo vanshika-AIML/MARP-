@@ -17,11 +17,13 @@ export function ExportModal({
   const [exportFormat, setExportFormat] = useState('html');
   const [isExporting, setIsExporting] = useState(false);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const handleExport = async () => {
     if (!presentation) return;
     setIsExporting(true);
     setSuccessMsg(null);
+    setErrorMsg(null);
 
     try {
       if (exportFormat === 'markdown') {
@@ -53,6 +55,7 @@ export function ExportModal({
     } catch (err) {
       console.error('Export failed:', err);
       setIsExporting(false);
+      setErrorMsg(err.message || 'Export failed. Please try again.');
     }
   };
 
@@ -127,6 +130,12 @@ export function ExportModal({
         {successMsg && (
           <div className="p-2 bg-emerald-50 text-emerald-700 text-xs rounded border border-emerald-200 text-center font-medium">
             {successMsg}
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="p-2 bg-rose-50 text-rose-700 text-xs rounded border border-rose-200 text-center font-medium">
+            {errorMsg}
           </div>
         )}
 

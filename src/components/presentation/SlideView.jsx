@@ -7,6 +7,7 @@
  * - Scalable aspect-ratio container (16:9)
  */
 import React, { useMemo } from 'react';
+import { getTheme } from '../../utils/themeRegistry';
 
 /**
  * Basic safe markdown-to-html compiler tailored for MARP slides
@@ -157,6 +158,7 @@ export function SlideView({
 }) {
   const directives = slide?.directives || {};
   const currentTheme = directives.theme || theme || 'default';
+  const themeTokens = getTheme(currentTheme);
   const slideClass = directives._class || directives.class || '';
   const backgroundColor = directives._backgroundColor || directives.backgroundColor;
   const color = directives._color || directives.color;
@@ -180,6 +182,17 @@ export function SlideView({
     .join(' ');
 
   const customStyles = {
+    '--theme-background': themeTokens.colors.background,
+    '--theme-surface': themeTokens.colors.surface,
+    '--theme-primary': themeTokens.colors.primary,
+    '--theme-secondary': themeTokens.colors.secondary,
+    '--theme-accent': themeTokens.colors.accent,
+    '--theme-text': themeTokens.colors.text,
+    '--theme-muted': themeTokens.colors.muted,
+    '--theme-heading-font': themeTokens.fonts.heading,
+    '--theme-body-font': themeTokens.fonts.body,
+    '--theme-radius': themeTokens.radius,
+    '--theme-shadow': themeTokens.shadows,
     ...(backgroundColor ? { backgroundColor } : {}),
     ...(color ? { color } : {}),
     ...style,

@@ -56,12 +56,10 @@ export function Workspace({
 
       {/* Main Authoring Area */}
       <main className="flex-1 flex overflow-hidden">
-        {/* Editor Pane */}
-        {(viewMode === 'split' || viewMode === 'editor') && (
+        {/* Markdown editor is intentionally exclusive to the Editor tab. */}
+        {viewMode === 'editor' && (
           <div
-            className={`flex flex-col h-full bg-white border-r border-slate-200/80 ${
-              viewMode === 'split' ? 'w-1/2' : 'w-full'
-            }`}
+            className="flex flex-col h-full bg-white border-r border-slate-200/80 w-full"
           >
             <EditorToolbar
               onFormat={onFormat}
@@ -79,20 +77,10 @@ export function Workspace({
           </div>
         )}
 
-        {/* Live Preview Pane */}
-        {(viewMode === 'split' || viewMode === 'preview') && (
-          <div
-            className={`h-full ${
-              viewMode === 'split' ? 'w-1/2' : 'w-full'
-            }`}
-          >
-            {viewMode === 'split' ? (
-              <AIAgentPanel
-                onApplyMarkdown={onApplyMarkdown}
-                wsStatus={wsStatus}
-                onSimulateStream={onSimulateStream}
-              />
-            ) : (
+        {/* Split view is the visual canvas plus contextual agent. */}
+        {viewMode === 'split' && (
+          <>
+            <div className="h-full flex-1 min-w-0 border-r border-slate-200/80">
               <MarkdownPreview
                 slide={slides[activeSlide]}
                 slides={slides}
@@ -106,7 +94,33 @@ export function Workspace({
                 onZoomOut={onZoomOut}
                 onZoomReset={onZoomReset}
               />
-            )}
+            </div>
+            <aside className="h-full w-[340px] shrink-0 hidden md:block">
+              <AIAgentPanel
+                onApplyMarkdown={onApplyMarkdown}
+                wsStatus={wsStatus}
+                onSimulateStream={onSimulateStream}
+              />
+            </aside>
+          </>
+        )}
+
+        {/* Preview tab keeps the full visual presentation surface. */}
+        {viewMode === 'preview' && (
+          <div className="h-full w-full">
+            <MarkdownPreview
+              slide={slides[activeSlide]}
+              slides={slides}
+              activeSlide={activeSlide}
+              theme={theme}
+              zoom={zoom}
+              onNextSlide={onNextSlide}
+              onPrevSlide={onPrevSlide}
+              onPresent={onPresent}
+              onZoomIn={onZoomIn}
+              onZoomOut={onZoomOut}
+              onZoomReset={onZoomReset}
+            />
           </div>
         )}
       </main>

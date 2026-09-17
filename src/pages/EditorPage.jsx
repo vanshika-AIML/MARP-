@@ -14,9 +14,8 @@ import StatusBar from '../components/layout/StatusBar';
 import GenerationOverlay from '../components/presentation/GenerationOverlay';
 import ExportModal from '../components/presentation/ExportModal';
 import PreviewPage from './PreviewPage';
-import { STARTER_TEMPLATES } from '../utils/mockData';
 
-export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate }) {
+export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRoute = false }) {
   const presentation = usePresentation();
   const {
     id,
@@ -41,6 +40,10 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate }) {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isPresenting, setIsPresenting] = useState(false);
+
+  React.useEffect(() => {
+    if (previewRoute) setIsPresenting(true);
+  }, [previewRoute]);
 
   // Editor hook for CodeMirror manipulation & slide synchronization
   const {

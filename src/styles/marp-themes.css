@@ -1,5 +1,20 @@
 /* MARP Core Presentation Theme Definitions */
 
+.marp-slide-wrapper {
+  background: var(--theme-background, #ffffff);
+  color: var(--theme-text, #1e293b);
+  font-family: var(--theme-body-font, Inter), system-ui, sans-serif;
+  transition: background-color .25s ease, color .25s ease;
+}
+.marp-slide-wrapper h1, .marp-slide-wrapper h2, .marp-slide-wrapper h3 {
+  font-family: var(--theme-heading-font, Inter), system-ui, sans-serif;
+}
+.marp-slide-wrapper h1 { color: var(--theme-primary, #0369a1); }
+.marp-slide-wrapper h2 { color: var(--theme-text, #0f172a); }
+.marp-slide-wrapper p, .marp-slide-wrapper li { color: var(--theme-secondary, #334155); }
+.marp-slide-wrapper pre { background: var(--theme-surface, #f1f5f9); border-color: color-mix(in srgb, var(--theme-primary, #0284c7) 20%, transparent); }
+.marp-slide-wrapper blockquote { border-color: var(--theme-accent, #0284c7); }
+
 /* Base Slide Container System */
 .marp-slide-wrapper {
   position: relative;

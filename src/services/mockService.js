@@ -62,6 +62,9 @@ export const mockService = {
 
   async exportPresentation(id, format = 'html') {
     await new Promise((r) => setTimeout(r, 300));
+    if (format === 'pptx') {
+      throw new Error('PowerPoint export requires the configured backend export service.');
+    }
     const presentation = await this.getPresentation(id);
     return {
       success: true,

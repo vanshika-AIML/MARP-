@@ -21,18 +21,13 @@ import {
 } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
 import DirectivesHelper from './DirectivesHelper';
+import { THEME_REGISTRY } from '../../utils/themeRegistry';
 
 export function EditorToolbar({
   onFormat,
   currentTheme = 'default',
   onChangeTheme,
 }) {
-  const themeOptions = [
-    { value: 'default', label: 'Theme: Default' },
-    { value: 'gaia', label: 'Theme: Gaia' },
-    { value: 'uncover', label: 'Theme: Uncover' },
-  ];
-
   return (
     <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-50 border-b border-slate-200/80 select-none overflow-x-auto">
       {/* Left Formatting Group */}
@@ -191,9 +186,9 @@ export function EditorToolbar({
             onChange={(e) => onChangeTheme && onChangeTheme(e.target.value)}
             className="text-xs bg-transparent text-slate-700 font-medium cursor-pointer focus:outline-none"
           >
-            <option value="default">Default Theme</option>
-            <option value="gaia">Gaia Theme</option>
-            <option value="uncover">Uncover Theme</option>
+            {THEME_REGISTRY.map((theme) => (
+              <option key={theme.id} value={theme.id}>{theme.name}</option>
+            ))}
           </select>
         </div>
       </div>

@@ -38,7 +38,7 @@ export function useWebSocket(customUrl = null, options = {}) {
   const reconnectCountRef = useRef(0);
   const reconnectTimerRef = useRef(null);
 
-  const wsUrl = (customUrl || DEFAULT_WS_URL).replace(/\/+$/, '') + '/ws/generation';
+  const wsUrl = `${(customUrl || DEFAULT_WS_URL).replace(/\/$/, '')}/ws/generation`;
 
   const handleSocketMessage = useCallback((event) => {
     try {
@@ -67,7 +67,7 @@ export function useWebSocket(customUrl = null, options = {}) {
   }, [onMessage, onEvent]);
 
   const connect = useCallback(() => {
-    if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
+    if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
       return;
     }
 
@@ -116,7 +116,7 @@ export function useWebSocket(customUrl = null, options = {}) {
   }, []);
 
   const sendMessage = useCallback((message) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(typeof message === 'string' ? message : JSON.stringify(message));
       return true;
     }
@@ -126,24 +126,36 @@ export function useWebSocket(customUrl = null, options = {}) {
   /**
    * Helper to simulate a realistic real-time generation stream for testing / demo mode
    */
-  const simulateGenerationStream = useCallback(async (prompt, onSlideGenerated, onCompleted) => {
-    setEventState({ type: 'generating', progress: 10, message: `Analyzing presentation topic: "${prompt}"...` });
-    await new Promise((r) => setTimeout(r, 600));
+  const simulateGenerationStream = useCallback(async (prompt, onSlideGenerated, onCompleted, generationType = 'slide') => {
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    setEventState({ type: 'generating', progress: 10, message: `Analyzing topic: "${prompt}"...` });
+    await wait(500);
 
-    setEventState({ type: 'generating_slide', progress: 35, slideIndex: 1, message: 'Drafting executive overview...' });
-    await new Promise((r) => setTimeout(r, 800));
+    if (generationType === 'deck') {
+      setEventState({ type: 'outlining', progress: 25, message: 'Creating a coherent slide outline...' });
+      await wait(550);
+      const sections = ['The opportunity', 'Key ideas', 'How it works', 'Expected impact'];
+      const slides = sections.map((section, index) => {
+        setEventState({ type: 'generating_slide', progress: 35 + index * 10, slideIndex: index + 2, message: `Generating slide ${index + 2} of ${sections.length + 1}: ${section}` });
+        return `\n\n---\n\n## ${section}\n\n- ${prompt} becomes actionable through a clear, repeatable workflow\n- Focused decisions replace fragmented manual effort\n- The next step is measurable, collaborative, and ready to ship`;
+      });
+      await wait(900);
+      setEventState({ type: 'styling', progress: 82, message: 'Applying theme and presentation hierarchy...' });
+      await wait(450);
+      const generatedMarkdown = `---\nmarp: true\ntheme: executive\npaginate: true\nheader: "MARP Studio AI Agent"\nfooter: "Generated presentation"\n---\n\n<!-- _class: lead -->\n# ${prompt}\n\n### A clear story, ready to present\n${slides.join('')}`;
+      if (onSlideGenerated) onSlideGenerated(generatedMarkdown);
+    } else {
+      setEventState({ type: 'generating_slide', progress: 55, slideIndex: 1, message: 'Drafting a focused visual slide...' });
+      await wait(800);
+      setEventState({ type: 'styling', progress: 82, message: 'Applying hierarchy and theme...' });
+      await wait(400);
+      const generatedMarkdown = `\n\n---\n\n<!-- _class: lead -->\n# ${prompt}\n\n- A focused, presentation-ready point of view\n- Clear hierarchy for fast audience comprehension\n- Fully editable MARP Markdown`;
+      if (onSlideGenerated) onSlideGenerated(generatedMarkdown);
+    }
 
-    setEventState({ type: 'generating_slide', progress: 65, slideIndex: 2, message: 'Structuring system architecture & directives...' });
-    await new Promise((r) => setTimeout(r, 900));
-
-    setEventState({ type: 'rendering', progress: 85, message: 'Applying MARP themes and compiling slides...' });
-    await new Promise((r) => setTimeout(r, 600));
-
-    const generatedMarkdown = `\n\n---\n\n<!-- _class: lead -->\n# 💡 ${prompt}\n### AI Generated Presentation Slide\n\n- Real-time streamed from Agent WebSocket\n- Instant MARP theme rendering\n- Fully editable in Markdown`;
-    
-    if (onSlideGenerated) onSlideGenerated(generatedMarkdown);
-
-    setEventState({ type: 'completed', progress: 100, message: 'Slide generated successfully!' });
+    setEventState({ type: 'rendering', progress: 94, message: 'Rendering presentation canvas...' });
+    await wait(350);
+    setEventState({ type: 'completed', progress: 100, message: generationType === 'deck' ? 'Full deck generated successfully!' : 'Slide generated successfully!' });
     if (onCompleted) onCompleted();
 
     setTimeout(() => {

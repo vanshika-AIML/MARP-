@@ -3,7 +3,7 @@
  * Bottom application status bar with document metrics and backend connection health
  */
 import React from 'react';
-import { Activity, Server, Radio, FileText } from 'lucide-react';
+import { Server, Radio, FileText } from 'lucide-react';
 import Badge from '../ui/Badge';
 
 export function StatusBar({

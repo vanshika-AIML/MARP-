@@ -30,6 +30,7 @@ export function MarkdownPreview({
           style={{ transform: `scale(${zoom})` }}
         >
           <SlideView
+            key={`${activeSlide}-${slide?.content?.length || 0}`}
             slide={slide || slides[activeSlide]}
             theme={theme}
             className="w-full h-full"

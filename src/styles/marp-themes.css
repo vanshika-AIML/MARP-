@@ -1,250 +1,74 @@
-/* MARP Core Presentation Theme Definitions */
-
+/* Slide canvas: all sizing is relative to this 16:9 canvas, never the browser.
+   The same renderer and rules are used in thumbnails, preview and presentation. */
 .marp-slide-wrapper {
-  background: var(--theme-background, #ffffff);
-  color: var(--theme-text, #1e293b);
-  font-family: var(--theme-body-font, Inter), system-ui, sans-serif;
-  transition: background-color .25s ease, color .25s ease;
+  container-type: inline-size; position: relative; isolation: isolate; width: 100%; aspect-ratio: 16 / 9;
+  display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;
+  background: var(--theme-background, #fff); color: var(--theme-text, #0f172a);
+  --slide-rule: 1px; --slide-corner: 0px; --slide-heading-weight: 750; --slide-tracking: -.045em;
+  --slide-padding-x: 8%; --slide-padding-y: 7%; --slide-title-size: 3.15em;
+  font-family: var(--theme-body-font, Inter), system-ui, sans-serif; line-height: 1.5;
 }
-.marp-slide-wrapper h1, .marp-slide-wrapper h2, .marp-slide-wrapper h3 {
-  font-family: var(--theme-heading-font, Inter), system-ui, sans-serif;
-}
-.marp-slide-wrapper h1 { color: var(--theme-primary, #0369a1); }
-.marp-slide-wrapper h2 { color: var(--theme-text, #0f172a); }
-.marp-slide-wrapper p, .marp-slide-wrapper li { color: var(--theme-secondary, #334155); }
-.marp-slide-wrapper pre { background: var(--theme-surface, #f1f5f9); border-color: color-mix(in srgb, var(--theme-primary, #0284c7) 20%, transparent); }
-.marp-slide-wrapper blockquote { border-color: var(--theme-accent, #0284c7); }
-
-/* Base Slide Container System */
-.marp-slide-wrapper {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background-color: #ffffff;
-  color: #1e293b;
-  overflow: hidden;
-  box-sizing: border-box;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.marp-slide-content {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  width: 100%;
-  height: 100%;
-  padding: 5% 7%;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-/* MARP Default Theme */
-.marp-theme-default {
-  background-color: #ffffff;
-  color: #0f172a;
-}
-.marp-theme-default h1 {
-  font-size: 2.25em;
-  font-weight: 700;
-  color: #0369a1;
-  margin-bottom: 0.4em;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-}
-.marp-theme-default h2 {
-  font-size: 1.6em;
-  font-weight: 600;
-  color: #0f172a;
-  margin-top: 0.3em;
-  margin-bottom: 0.3em;
-  line-height: 1.2;
-}
-.marp-theme-default h3 {
-  font-size: 1.25em;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 0.3em;
-}
-.marp-theme-default p, .marp-theme-default ul, .marp-theme-default ol {
-  font-size: 1em;
-  color: #334155;
-  margin-bottom: 0.5em;
-}
-.marp-theme-default ul {
-  list-style-type: disc;
-  padding-left: 1.5em;
-}
-.marp-theme-default ol {
-  list-style-type: decimal;
-  padding-left: 1.5em;
-}
-.marp-theme-default li {
-  margin-bottom: 0.3em;
-}
-.marp-theme-default pre {
-  background-color: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 0.6em 0.8em;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85em;
-  overflow-x: auto;
-  margin: 0.5em 0;
-}
-.marp-theme-default code {
-  font-family: 'JetBrains Mono', monospace;
-  background-color: #f1f5f9;
-  padding: 0.15em 0.35em;
-  border-radius: 4px;
-  font-size: 0.9em;
-  color: #0284c7;
-}
-.marp-theme-default blockquote {
-  border-left: 4px solid #0284c7;
-  padding-left: 1em;
-  color: #64748b;
-  font-style: italic;
-  margin: 0.5em 0;
-}
-.marp-theme-default table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0.6em 0;
-  font-size: 0.9em;
-}
-.marp-theme-default th, .marp-theme-default td {
-  border: 1px solid #cbd5e1;
-  padding: 0.4em 0.7em;
-  text-align: left;
-}
-.marp-theme-default th {
-  background-color: #f8fafc;
-  font-weight: 600;
-}
-
-/* MARP Gaia Theme */
-.marp-theme-gaia {
-  background-color: #fcfbf9;
-  color: #2b2b2b;
-  font-family: 'Inter', -apple-system, sans-serif;
-}
-.marp-theme-gaia h1 {
-  font-size: 2.3em;
-  font-weight: 800;
-  color: #832729;
-  margin-bottom: 0.4em;
-  line-height: 1.15;
-}
-.marp-theme-gaia h2 {
-  font-size: 1.6em;
-  font-weight: 700;
-  color: #4a4a4a;
-  margin-bottom: 0.3em;
-}
-.marp-theme-gaia pre {
-  background-color: #f0ede6;
-  border-radius: 6px;
-  padding: 0.6em 0.8em;
-  font-size: 0.85em;
-}
-.marp-theme-gaia blockquote {
-  border-left: 4px solid #832729;
-  padding-left: 1em;
-  color: #5c5c5c;
-  font-style: italic;
-}
-
-/* MARP Uncover Theme */
-.marp-theme-uncover {
-  background-color: #ffffff;
-  color: #1a1a1a;
-  text-align: center;
-}
-.marp-theme-uncover .marp-slide-content {
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-.marp-theme-uncover h1 {
-  font-size: 2.6em;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.03em;
-  margin-bottom: 0.3em;
-}
-.marp-theme-uncover h2 {
-  font-size: 1.8em;
-  font-weight: 600;
-  color: #64748b;
-  margin-bottom: 0.5em;
-}
-.marp-theme-uncover ul, .marp-theme-uncover ol {
-  text-align: left;
-  display: inline-block;
-}
-
-/* Slide Modifiers */
-.marp-slide-wrapper.slide-lead .marp-slide-content {
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
-
-.marp-slide-wrapper.slide-invert {
-  background-color: #0f172a !important;
-  color: #f8fafc !important;
-}
-.marp-slide-wrapper.slide-invert h1,
-.marp-slide-wrapper.slide-invert h2,
-.marp-slide-wrapper.slide-invert h3 {
-  color: #38bdf8 !important;
-}
-.marp-slide-wrapper.slide-invert p,
-.marp-slide-wrapper.slide-invert li {
-  color: #cbd5e1 !important;
-}
-.marp-slide-wrapper.slide-invert pre {
-  background-color: #1e293b !important;
-  border-color: #334155 !important;
-  color: #e2e8f0 !important;
-}
-
-/* Header & Footer Directives */
-.marp-slide-header {
-  position: absolute;
-  top: 1.2%;
-  left: 7%;
-  right: 7%;
-  font-size: 0.65em;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 500;
-  pointer-events: none;
-}
-
-.marp-slide-footer {
-  position: absolute;
-  bottom: 2%;
-  left: 7%;
-  right: 7%;
-  font-size: 0.65em;
-  color: #94a3b8;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  pointer-events: none;
-}
-
-.marp-slide-pagenum {
-  font-size: 0.7em;
-  font-weight: 600;
-  color: #94a3b8;
-  font-feature-settings: "tnum";
-}
+.marp-slide-content { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; flex: 1; min-height: 0; width: 100%; padding: var(--slide-padding-y) var(--slide-padding-x); font-size: 2.1cqw; overflow: hidden; box-sizing: border-box; }
+.marp-slide-wrapper h1, .marp-slide-wrapper h2, .marp-slide-wrapper h3 { font-family: var(--theme-heading-font, Inter), system-ui, sans-serif; font-weight: var(--slide-heading-weight); letter-spacing: var(--slide-tracking); overflow-wrap: anywhere; }
+.marp-slide-wrapper h1 { color: var(--theme-primary); font-size: 2.65em; line-height: 1.08; margin: 0 0 .38em; max-width: 23ch; }
+.marp-slide-wrapper h2 { color: var(--theme-primary); font-size: 1.95em; line-height: 1.13; margin: 0 0 .65em; max-width: 34ch; }
+.marp-slide-wrapper h3 { color: var(--theme-secondary); font-size: 1.2em; line-height: 1.25; margin: .2em 0 .7em; }
+.marp-slide-wrapper p { margin: 0 0 .65em; max-width: 65ch; color: var(--theme-secondary); line-height: 1.6; }
+.marp-slide-wrapper strong { color: var(--theme-primary); font-weight: 750; }
+.marp-slide-wrapper a { color: var(--theme-primary); text-underline-offset: .2em; }
+.marp-slide-wrapper ul, .marp-slide-wrapper ol { margin: .2em 0 .6em; padding-left: 1.2em; display: grid; gap: .55em; }
+.marp-slide-wrapper ul { list-style: disc; }.marp-slide-wrapper ol { list-style: decimal; }
+.marp-slide-wrapper li { padding-left: .2em; line-height: 1.45; color: var(--theme-text); }
+.marp-slide-wrapper li::marker { color: var(--theme-accent); font-weight: 750; }
+.marp-slide-wrapper blockquote { border-left: .13em solid var(--theme-accent); padding: .2em 0 .2em 1em; margin: .8em 0; font-family: var(--theme-heading-font), Georgia, serif; font-size: 1.4em; line-height: 1.35; color: var(--theme-primary); }
+.marp-slide-wrapper pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--theme-surface); color: var(--theme-text); border: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent); border-left: .25em solid var(--theme-accent); padding: 1em 1.3em; border-radius: var(--slide-corner); font-size: .8em; line-height: 1.65; margin: .4em 0; max-height: 100%; overflow: hidden; }
+.marp-slide-wrapper code { font-family: 'JetBrains Mono', Consolas, monospace; background: color-mix(in srgb, var(--theme-accent) 10%, var(--theme-background)); color: var(--theme-primary); padding: .1em .25em; font-size: .9em; border-radius: .15em; }
+.marp-slide-wrapper pre code { color: inherit; padding: 0; background: none; font-size: 1em; }
+.marp-slide-wrapper table { width: 100%; border-collapse: collapse; font-size: .88em; line-height: 1.4; margin: .5em 0; }
+.marp-slide-wrapper th, .marp-slide-wrapper td { padding: .7em .85em; text-align: left; border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 18%, transparent); }
+.marp-slide-wrapper th { font-weight: 700; color: var(--theme-primary); background: color-mix(in srgb, var(--theme-accent) 10%, var(--theme-background)); border-bottom: .14em solid var(--theme-accent); }
+.marp-slide-wrapper tbody tr:nth-child(even) { background: color-mix(in srgb, var(--theme-surface) 70%, transparent); }
+.marp-slide-wrapper img { max-width: 100%; max-height: 24cqw; object-fit: contain; border-radius: var(--slide-corner); margin: .6em 0; }
+.marp-slide-wrapper::before, .marp-slide-wrapper::after { content: ''; position: absolute; z-index: 0; pointer-events: none; }
+.marp-slide-wrapper::before { width: 24%; height: 100%; top: 0; right: 0; background: linear-gradient(160deg, color-mix(in srgb, var(--theme-accent) 7%, transparent), transparent); }
+.marp-slide-wrapper::after { width: 8%; height: .35cqw; background: var(--theme-accent); left: var(--slide-padding-x); bottom: 5%; }
+.marp-slide-header, .marp-slide-footer { position: absolute; left: var(--slide-padding-x); right: var(--slide-padding-x); z-index: 2; font-size: 1.05cqw; line-height: 1.3; letter-spacing: .045em; color: var(--theme-muted); pointer-events: none; }
+.marp-slide-header { top: 3.4%; text-transform: uppercase; }.marp-slide-footer { bottom: 2.8%; display: flex; justify-content: space-between; gap: 1em; }.marp-slide-pagenum { font-variant-numeric: tabular-nums; }
+/* Composition responds to content, with optional MARP class overrides. */
+.slide-layout-title .marp-slide-content { padding-right: 17%; }.slide-layout-title h1 { font-size: var(--slide-title-size); max-width: 18ch; }.slide-layout-title p { max-width: 40ch; font-size: 1.1em; }.slide-layout-title::after, .slide-layout-section::after { bottom: 16%; }
+.slide-layout-section h2 { font-size: 3em; max-width: 20ch; }.slide-layout-section::before { width: 28%; background: var(--theme-accent); opacity: .12; }
+.slide-layout-list h2 { margin-bottom: .85em; }.slide-layout-list.slide-variant-1 ul:has(li:nth-child(4)), .slide-layout-columns ul { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 2.5em; row-gap: 1em; }.slide-layout-list.slide-variant-2 ul { list-style: none; padding-left: 0; }.slide-layout-list.slide-variant-2 li { border-top: 1px solid color-mix(in srgb, var(--theme-accent) 35%, transparent); padding: .5em 0; }
+.slide-layout-quote .marp-slide-content { padding: 8% 12%; }.slide-layout-quote blockquote { border: none; padding: 0; font-size: 2.15em; line-height: 1.18; max-width: 29ch; }.slide-layout-quote blockquote:first-of-type::before { content: '“'; display: block; font: 2.4em/.6 Georgia, serif; color: var(--theme-accent); margin-bottom: .12em; }.slide-layout-quote::after { width: 12%; }
+.slide-layout-code .marp-slide-content, .slide-layout-data .marp-slide-content { --slide-padding-y: 6%; }.slide-layout-code h2, .slide-layout-data h2 { font-size: 1.7em; margin-bottom: .5em; }
+.slide-layout-stats strong { font-size: 1.9em; line-height: 1.1; font-variant-numeric: tabular-nums; }.slide-layout-stats p { font-size: 1.2em; }.slide-layout-stats::before { width: 40%; border-left: 1px solid color-mix(in srgb, var(--theme-accent) 15%, transparent); }
+.slide-layout-image .marp-slide-content { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: min-content; align-content: center; align-items: center; column-gap: 7%; }.slide-layout-image .marp-slide-content > * { grid-column: 1; }.slide-layout-image .marp-slide-content > img { grid-column: 2; grid-row: 1 / span 8; width: 100%; height: 34cqw; max-height: 34cqw; object-fit: cover; margin: 0; }.slide-layout-image h1 { font-size: 2.15em; }.slide-layout-image h2 { font-size: 1.65em; }.slide-layout-image.slide-variant-1 .marp-slide-content > img { border-radius: 50% 50% 0 0; }.slide-layout-image.slide-variant-2 .marp-slide-content > img { outline: .3em solid var(--theme-accent); outline-offset: -.3em; }
+.slide-layout-columns .marp-slide-content { justify-content: center; }.slide-dense .marp-slide-content { font-size: 1.65cqw; }.slide-dense h1, .slide-dense h2 { font-size: 1.8em; }.slide-dense ul, .slide-dense ol { gap: .25em; }
+/* 24 themes: distinctive graphic systems, not a single rounded card template. */
+.marp-theme-default { --slide-title-size: 3.25em; }.marp-theme-default::before { width: .6%; background: var(--theme-primary); }.marp-theme-default h2 { border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent); padding-bottom: .35em; }
+.marp-theme-gaia { --slide-heading-weight: 800; background-image: radial-gradient(ellipse at 100% 100%, #fed7aa55, transparent 60%); }.marp-theme-gaia::before { width: 31%; height: 55%; border-radius: 50%; border: 2.2cqw solid #ea580c14; background: none; right: -16%; top: -22%; }.marp-theme-gaia blockquote { font-style: italic; }.marp-theme-gaia img { border-radius: 40% 0 0 0; }
+.marp-theme-uncover { --slide-title-size: 3.9em; --slide-heading-weight: 850; text-align: center; }.marp-theme-uncover .marp-slide-content { align-items: center; }.marp-theme-uncover ul, .marp-theme-uncover ol, .marp-theme-uncover pre, .marp-theme-uncover table { text-align: left; width: 100%; }.marp-theme-uncover::before { display: none; }.marp-theme-uncover::after { left: 46%; bottom: 10%; width: 8%; height: .5cqw; }.marp-theme-uncover.slide-layout-title .marp-slide-content { padding-right: var(--slide-padding-x); }
+.marp-theme-executive { --slide-heading-weight: 650; --slide-padding-x: 10%; background-image: linear-gradient(90deg, #183b56 0 2%, transparent 2%); }.marp-theme-executive::before { width: 22%; border-left: 1px solid #183b5615; background: #183b5605; }.marp-theme-executive h1 { font-family: Georgia, serif; }.marp-theme-executive th { text-transform: uppercase; font-size: .82em; letter-spacing: .08em; }
+.marp-theme-corporate { --slide-title-size: 3.4em; background-image: linear-gradient(180deg, #1d4ed8 0 1.5%, transparent 1.5%); }.marp-theme-corporate::before { width: 30%; transform: skewX(-20deg); right: -18%; background: #1d4ed80b; }.marp-theme-corporate th { background: #1d4ed8; color: white; }.marp-theme-corporate li::marker { content: '▸  '; }
+.marp-theme-consulting { --slide-tracking: -.03em; --slide-heading-weight: 700; }.marp-theme-consulting h2 { padding-bottom: .4em; border-bottom: .08em solid var(--theme-primary); max-width: none; }.marp-theme-consulting::before { background: none; }.marp-theme-consulting::after { width: 84%; height: 1px; opacity: .45; }.marp-theme-consulting table { font-size: .82em; }.marp-theme-consulting th { background: transparent; border-bottom-color: var(--theme-primary); }
+.marp-theme-minimal { --slide-padding-x: 12%; --slide-title-size: 3.2em; --slide-heading-weight: 550; }.marp-theme-minimal::before { display: none; }.marp-theme-minimal::after { width: 1.2%; aspect-ratio: 1; height: auto; border-radius: 50%; }.marp-theme-minimal h2 { font-weight: 500; }.marp-theme-minimal blockquote { font-weight: 400; }
+.marp-theme-swiss { --slide-heading-weight: 850; --slide-tracking: -.06em; --slide-padding-x: 7%; --slide-title-size: 3.65em; }.marp-theme-swiss::before { top: 0; right: 0; height: 16%; width: 13%; background: #dc2626; }.marp-theme-swiss::after { height: .2cqw; width: 86%; background: #171717; }.marp-theme-swiss h1, .marp-theme-swiss h2 { color: #171717; }.marp-theme-swiss .marp-slide-pagenum { font-size: 1.6em; color: #dc2626; font-weight: 800; }.marp-theme-swiss img { filter: grayscale(1); }
+.marp-theme-editorial { --slide-heading-weight: 500; --slide-tracking: -.055em; --slide-title-size: 3.6em; }.marp-theme-editorial::before { width: 15%; border-left: 1px solid #703d5720; background: #703d5705; }.marp-theme-editorial h3 { font-style: italic; }.marp-theme-editorial blockquote { font-style: italic; }.marp-theme-editorial p { line-height: 1.55; }.marp-theme-editorial img { filter: saturate(.75) sepia(.12); }.marp-theme-editorial table { font-family: system-ui, sans-serif; }
+.marp-theme-glass { --slide-corner: .4em; background-image: radial-gradient(at 100% 0, #99f6e470, transparent 50%), radial-gradient(at 0 100%, #a5b4fc45, transparent 55%); }.marp-theme-glass::before { width: 32%; height: 57%; right: -14%; top: -22%; border: 1px solid #ffffff; background: #ffffff30; border-radius: 50%; }.marp-theme-glass pre, .marp-theme-glass table { background: #ffffff65; border: 1px solid #ffffff; }.marp-theme-glass img { border: .3em solid #ffffff90; }
+.marp-theme-aurora { --slide-title-size: 3.5em; background-image: linear-gradient(125deg, #ecfdf5, #eefbf7 65%, #fce7f3); }.marp-theme-aurora::before { width: 23%; height: 100%; background: linear-gradient(0deg, #db277710, #04785710); border-radius: 100% 0 0 0; }.marp-theme-aurora h1 { font-weight: 600; }.marp-theme-aurora img { border-radius: 0 25% 0 25%; }.marp-theme-aurora li::marker { color: #db2777; }
+.marp-theme-developer { --slide-tracking: -.04em; background-image: linear-gradient(#2563eb05 1px, transparent 1px), linear-gradient(90deg, #2563eb05 1px, transparent 1px); background-size: 3.5% 6.22%; }.marp-theme-developer::before { display: none; }.marp-theme-developer h2::before { content: '// '; color: #16a34a; font-family: Consolas, monospace; font-weight: 400; }.marp-theme-developer pre { background: #172033; color: #dbeafe; border-left-color: #16a34a; }.marp-theme-developer .marp-slide-header { font-family: Consolas, monospace; }
+.marp-theme-cyber { --slide-tracking: -.03em; background-image: linear-gradient(135deg, #67e8f90b, transparent 55%); }.marp-theme-cyber::before { background: none; width: 35%; height: 62%; top: -23%; right: -15%; border: 1px solid #67e8f94a; transform: rotate(45deg); }.marp-theme-cyber::after { width: 30%; height: 1px; box-shadow: 0 0 1cqw #67e8f9; }.marp-theme-cyber h1 { text-shadow: .04em .04em #67e8f915; }.marp-theme-cyber pre { border: 1px solid #67e8f940; }.marp-theme-cyber img { border: 1px solid #67e8f9; }
+.marp-theme-cloud { --slide-corner: .3em; background-image: linear-gradient(160deg, #edf7ff, #fff 70%); }.marp-theme-cloud::before { top: auto; bottom: -22%; right: -6%; width: 40%; height: 50%; border-radius: 50%; background: #bae6fd55; box-shadow: -8cqw -2cqw #e0f2fe70; }.marp-theme-cloud::after { width: 6%; border-radius: 10px; }.marp-theme-cloud pre { background: #12324a; color: #e0f2fe; }
+.marp-theme-ai-lab { --slide-tracking: -.055em; background-image: radial-gradient(circle at 95% 5%, #c4b5fd50, transparent 40%); }.marp-theme-ai-lab::before { width: 22%; height: 39%; border-radius: 50%; border: 1px solid #7c3aed30; right: -8%; top: -12%; background: none; box-shadow: 0 0 0 2cqw #7c3aed05, 0 0 0 4cqw #7c3aed04; }.marp-theme-ai-lab h2 { color: #4338ca; }.marp-theme-ai-lab th { background: #ede9fe; }.marp-theme-ai-lab img { border-radius: 1.5em 0; }
+.marp-theme-data { --slide-heading-weight: 700; background-image: linear-gradient(90deg, #0f766e08 1px, transparent 1px); background-size: 10% 100%; }.marp-theme-data::before { display: none; }.marp-theme-data::after { width: 18%; height: 2%; background: repeating-linear-gradient(90deg, #0f766e 0 14%, transparent 14% 20%); }.marp-theme-data table { font-variant-numeric: tabular-nums; }.marp-theme-data th { color: #fff; background: #0f766e; }.marp-theme-data strong { color: #ea580c; }
+.marp-theme-research { --slide-tracking: -.035em; --slide-heading-weight: 600; }.marp-theme-research::before { width: 100%; height: 1%; background: #1e3a8a; }.marp-theme-research::after { width: 84%; height: 1px; background: #1e3a8a35; }.marp-theme-research blockquote { font-family: Georgia, serif; font-style: italic; }.marp-theme-research table { border-top: .15em solid #1e3a8a; border-bottom: .15em solid #1e3a8a; }.marp-theme-research th { background: transparent; }.marp-theme-research p { line-height: 1.6; }
+.marp-theme-conference { --slide-heading-weight: 800; --slide-title-size: 3.5em; }.marp-theme-conference::before { right: -12%; top: 0; width: 23%; background: #9a341210; transform: skewX(-12deg); }.marp-theme-conference::after { width: 6%; height: 1.3%; background: #2563eb; }.marp-theme-conference h1 { max-width: 16ch; }.marp-theme-conference th { color: #fff; background: #9a3412; }.marp-theme-conference img { border-bottom: .4em solid #2563eb; }
+.marp-theme-midnight { --slide-heading-weight: 600; --slide-title-size: 3.45em; background-image: radial-gradient(ellipse at 100% 100%, #0c4a6e55, transparent 70%); }.marp-theme-midnight::before { width: 25%; background: none; border-left: 1px solid #38bdf820; }.marp-theme-midnight::after { height: 1px; width: 30%; background: linear-gradient(90deg, #38bdf8, transparent); }.marp-theme-midnight pre { background: #020617; }.marp-theme-midnight img { filter: saturate(.85); }
+.marp-theme-carbon { --slide-heading-weight: 850; --slide-title-size: 3.5em; --slide-tracking: -.045em; }.marp-theme-carbon::before { width: 18%; background: repeating-linear-gradient(135deg, transparent 0 1cqw, #ffffff04 1cqw 1.1cqw); }.marp-theme-carbon::after { width: 10%; height: .7cqw; background: #facc15; }.marp-theme-carbon h2 { border-bottom: .08em solid #facc15; padding-bottom: .35em; }.marp-theme-carbon th { background: #facc15; color: #171717; }.marp-theme-carbon img { filter: grayscale(1) contrast(1.1); }
+.marp-theme-deep-space { --slide-heading-weight: 600; background-image: radial-gradient(ellipse at 100% 100%, #7c3aed26, transparent 65%); }.marp-theme-deep-space::before { width: 40%; height: 70%; border: 1px solid #c4b5fd25; border-radius: 50%; right: -18%; top: -30%; background: none; box-shadow: 0 0 0 2cqw #c4b5fd06, 0 0 0 5cqw #c4b5fd04; }.marp-theme-deep-space::after { height: .2cqw; background: #f0abfc; }.marp-theme-deep-space img { border-radius: 50% 50% 0 0; }.marp-theme-deep-space pre { border-color: #c4b5fd50; }
+.marp-theme-terminal { --slide-heading-weight: 600; --slide-tracking: -.045em; --slide-title-size: 2.8em; }.marp-theme-terminal .marp-slide-content { font-family: 'IBM Plex Mono', Consolas, monospace; }.marp-theme-terminal h1, .marp-theme-terminal h2 { font-family: Consolas, monospace; }.marp-theme-terminal h2::before { content: '> '; color: #fef08a; }.marp-theme-terminal::before { background: repeating-linear-gradient(0deg, #ffffff02 0 1px, transparent 1px 4px); width: 100%; }.marp-theme-terminal::after { width: 1.5%; height: 2.5%; background: #86efac; }.marp-theme-terminal li::marker { content: '+ '; }.marp-theme-terminal th { background: #86efac; color: #07130d; }
+.marp-theme-bold { --slide-heading-weight: 850; --slide-title-size: 3.8em; --slide-tracking: -.06em; }.marp-theme-bold::before { width: 26%; background: #be123c0b; transform: skewX(-15deg); right: -18%; }.marp-theme-bold::after { width: 10%; height: 1cqw; background: #f59e0b; }.marp-theme-bold h1 { text-transform: uppercase; max-width: 17ch; }.marp-theme-bold blockquote { font-weight: 800; }.marp-theme-bold th { background: #be123c; color: white; }.marp-theme-bold img { border-radius: 0; box-shadow: .5em .5em #be123c; }
+.marp-theme-gradient { --slide-title-size: 3.5em; --slide-heading-weight: 650; background-image: linear-gradient(135deg, #eff6ff 20%, #ede9fe 65%, #fce7f3); }.marp-theme-gradient::before { width: 32%; height: 57%; right: -16%; top: -24%; border-radius: 50%; background: linear-gradient(135deg, #4f46e525, #0891b220); }.marp-theme-gradient::after { width: 18%; height: .4cqw; background: linear-gradient(90deg, #4f46e5, #db2777, #0891b2); }.marp-theme-gradient pre { background: #ffffff90; }.marp-theme-gradient img { border-radius: 1em; }
+/* Directives remain authoritative over automatic compositions. */
+.marp-slide-wrapper.slide-lead .marp-slide-content { justify-content: center; align-items: center; text-align: center; padding-inline: 8%; }
+.marp-slide-wrapper.slide-invert { background-color: #102033 !important; background-image: none; color: #f8fafc; --theme-text: #f8fafc !important; --theme-primary: #f8fafc !important; --theme-secondary: #dbeafe !important; --theme-muted: #cbd5e1 !important; --theme-surface: #172b42 !important; }
+@media (prefers-reduced-motion: reduce) { .marp-slide-wrapper { animation: none !important; transition: none !important; } }

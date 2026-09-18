@@ -2,62 +2,81 @@
  * Main App Component
  * Serves as the primary application root and standalone/embeddable entry point.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import Providers from './Providers';
-import { APP_ROUTES, getRoute, navigateTo } from './routes';
 import Dashboard from '../pages/Dashboard';
+import Landing from '../pages/Landing';
+import { PresentationLoading } from '../components/ui/ContentLoaders';
 import EditorPage from '../pages/EditorPage';
 import usePresentation from '../hooks/usePresentation';
 
+function PresentationRoute({ previewRoute = false }) {
+  const { presentationId } = useParams();
+  const { id, loadPresentation, createNewPresentation, isLoading, error } = usePresentation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    loadPresentation(presentationId);
+  }, [loadPresentation, presentationId]);
+
+  if (error && !isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center p-6 text-sm text-rose-700">
+        Presentation could not be loaded: {error}
+      </div>
+    );
+  }
+
+  if (isLoading || id !== presentationId) return <PresentationLoading />;
+
+  return (
+    <EditorPage
+      previewRoute={previewRoute}
+      onOpenDashboard={() => navigate('/dashboard')}
+      onNewDeckWithTemplate={async (template) => {
+        const created = await createNewPresentation(template);
+        if (created?.id) navigate(`/editor/${encodeURIComponent(created.id)}`);
+      }}
+    />
+  );
+}
+
 function AppContent() {
-  const [route, setRoute] = useState(getRoute);
-  const { loadPresentation, createNewPresentation } = usePresentation();
+  const { createNewPresentation } = usePresentation();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const handleRoute = () => setRoute(getRoute());
-    window.addEventListener('popstate', handleRoute);
-    return () => window.removeEventListener('popstate', handleRoute);
-  }, []);
-
-  useEffect(() => {
-    if (route.id && (route.name === APP_ROUTES.EDITOR || route.name === APP_ROUTES.PREVIEW)) {
-      loadPresentation(route.id);
-    }
-  }, [route.id, route.name, loadPresentation]);
-
-  const handleOpenDeck = async (deckId) => {
-    navigateTo(APP_ROUTES.EDITOR, deckId);
-  };
+  const handleOpenDeck = (deckId) => navigate(`/editor/${encodeURIComponent(deckId)}`);
 
   const handleNewDeckWithTemplate = async (template) => {
     const created = await createNewPresentation(template);
-    if (created?.id) navigateTo(APP_ROUTES.EDITOR, created.id);
+    if (!created?.id) throw new Error('Could not create your presentation. Please try again.');
+    navigate(`/editor/${encodeURIComponent(created.id)}`);
+    return created;
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col bg-slate-50">
-      {route.name === APP_ROUTES.DASHBOARD ? (
-        <Dashboard
-          onOpenDeck={handleOpenDeck}
-          onNewDeckWithTemplate={handleNewDeckWithTemplate}
-        />
-      ) : (
-        <EditorPage
-          previewRoute={route.name === APP_ROUTES.PREVIEW}
-          onOpenDashboard={() => navigateTo(APP_ROUTES.DASHBOARD)}
-          onNewDeckWithTemplate={handleNewDeckWithTemplate}
-        />
-      )}
-    </div>
+    <Routes>
+      <Route path="/" element={<Landing onCreate={handleNewDeckWithTemplate} />} />
+      <Route path="/dashboard" element={<Dashboard onOpenDeck={handleOpenDeck} onNewDeckWithTemplate={handleNewDeckWithTemplate} />} />
+      <Route path="/editor/:presentationId" element={<PresentationRoute />} />
+      <Route path="/preview/:presentationId" element={<PresentationRoute previewRoute />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
 
 export function App({ initialPresentation = null }) {
   return (
     <Providers initialPresentation={initialPresentation}>
-      <AppContent />
+      <BrowserRouter>
+        <div className="h-screen w-screen overflow-hidden flex flex-col bg-slate-50">
+          <AppContent />
+        </div>
+      </BrowserRouter>
     </Providers>
   );
 }
 
 export default App;
+

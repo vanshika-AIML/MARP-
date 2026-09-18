@@ -8,9 +8,8 @@ import { Sparkles, Bot, AlertCircle } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import { ProgressBar } from '../ui/Spinner';
+import GenerationVisual from './GenerationVisual';
 import Badge from '../ui/Badge';
-import { agentService } from '../../services/agentService';
 
 export function GenerationOverlay({
   isOpen,
@@ -18,14 +17,14 @@ export function GenerationOverlay({
   onApplyMarkdown,
   wsStatus,
   wsEventState,
-  onSimulateStream,
+  onGenerate,
 }) {
   const [prompt, setPrompt] = useState('');
   const [generationType, setGenerationType] = useState('slide'); // 'slide' | 'deck'
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const isGenerating =
+  const isGenerating = isSubmitting ||
     wsEventState?.type === 'generating' ||
     wsEventState?.type === 'generating_slide' ||
     wsEventState?.type === 'rendering';
@@ -38,41 +37,11 @@ export function GenerationOverlay({
     setError(null);
 
     try {
-      if (wsStatus !== 'connected' && onSimulateStream) {
-        // Run simulated streaming WebSocket demo
-        await onSimulateStream(
-          prompt,
-          (generatedMarkdown) => {
-            if (onApplyMarkdown) {
-              onApplyMarkdown(generatedMarkdown, generationType === 'deck');
-            }
-          },
-          () => {
-            setIsSubmitting(false);
-            setTimeout(() => {
-              onClose();
-              setPrompt('');
-            }, 1000);
-          },
-          generationType
-        );
-      } else {
-        // Direct Service invocation fallback
-        if (generationType === 'slide') {
-          const res = await agentService.generateSlide(prompt);
-          if (res?.generatedSlideMarkdown && onApplyMarkdown) {
-            onApplyMarkdown(res.generatedSlideMarkdown, false);
-          }
-        } else {
-          const res = await agentService.generateContent(prompt);
-          if (res?.generatedMarkdown && onApplyMarkdown) {
-            onApplyMarkdown(res.generatedMarkdown, true);
-          }
-        }
-        setIsSubmitting(false);
-        onClose();
-        setPrompt('');
-      }
+      const markdown = await onGenerate(prompt, generationType);
+      if (onApplyMarkdown) onApplyMarkdown(markdown, generationType === 'deck');
+      setIsSubmitting(false);
+      onClose();
+      setPrompt('');
     } catch (err) {
       setError(err.message || 'Generation failed. Please try again.');
       setIsSubmitting(false);
@@ -100,7 +69,7 @@ export function GenerationOverlay({
             dot
             size="xs"
           >
-            {wsStatus === 'connected' ? 'Live Stream' : wsStatus === 'connecting' ? 'Connecting' : 'Simulated / Ready'}
+            {wsStatus === 'connected' ? 'Live Stream' : wsStatus === 'connecting' ? 'Connecting' : 'Direct Backend'}
           </Badge>
         </div>
 
@@ -142,7 +111,7 @@ export function GenerationOverlay({
 
             <div>
               <Input
-                label="Topic or Instruction"
+                id="generation-prompt" label="Topic or Instruction"
                 placeholder="e.g. Microservices event sourcing architecture with Kafka and Redis"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -199,26 +168,7 @@ export function GenerationOverlay({
           </form>
         ) : (
           /* Live Streaming Generation Progress */
-          <div className="py-6 space-y-4 text-center">
-            <div className="inline-flex p-3 bg-sky-50 rounded-full text-sky-600 animate-pulse">
-              <Sparkles className="w-6 h-6" />
-            </div>
-
-            <div className="space-y-1">
-              <h4 className="text-sm font-semibold text-slate-900">
-                {wsEventState?.message || 'Generating slide content...'}
-              </h4>
-              <p className="text-xs text-slate-500">
-                Event: <code className="font-mono text-sky-600">{wsEventState?.type}</code>
-              </p>
-            </div>
-
-            <ProgressBar
-              progress={wsEventState?.progress || 45}
-              statusText={wsEventState?.message}
-              className="max-w-xs mx-auto"
-            />
-          </div>
+          <GenerationVisual event={wsEventState} />
         )}
       </div>
     </Modal>

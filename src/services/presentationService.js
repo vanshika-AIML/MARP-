@@ -5,6 +5,7 @@
  */
 import api from './api';
 import { mockService } from './mockService';
+import { shouldUseMockFallback } from './fallback';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_FALLBACK === 'true';
 
@@ -16,7 +17,7 @@ export const presentationService = {
     try {
       return await api.get('/presentations');
     } catch (err) {
-      if (USE_MOCK) {
+      if (USE_MOCK && shouldUseMockFallback(err)) {
         console.info('[presentationService] Backend unavailable; using mock service for listPresentations');
         return await mockService.listPresentations();
       }
@@ -32,7 +33,7 @@ export const presentationService = {
     try {
       return await api.get(`/presentations/${id}`);
     } catch (err) {
-      if (USE_MOCK) {
+      if (USE_MOCK && shouldUseMockFallback(err)) {
         console.info(`[presentationService] Backend unavailable; using mock service for getPresentation(${id})`);
         return await mockService.getPresentation(id);
       }
@@ -47,7 +48,7 @@ export const presentationService = {
     try {
       return await api.post('/presentations', payload);
     } catch (err) {
-      if (USE_MOCK) {
+      if (USE_MOCK && shouldUseMockFallback(err)) {
         console.info('[presentationService] Backend unavailable; using mock service for createPresentation');
         return await mockService.createPresentation(payload);
       }
@@ -63,7 +64,7 @@ export const presentationService = {
     try {
       return await api.put(`/presentations/${id}`, data);
     } catch (err) {
-      if (USE_MOCK) {
+      if (USE_MOCK && shouldUseMockFallback(err)) {
         console.info(`[presentationService] Backend unavailable; using mock service for updatePresentation(${id})`);
         return await mockService.updatePresentation(id, data);
       }
@@ -79,7 +80,7 @@ export const presentationService = {
     try {
       return await api.delete(`/presentations/${id}`);
     } catch (err) {
-      if (USE_MOCK) {
+      if (USE_MOCK && shouldUseMockFallback(err)) {
         console.info(`[presentationService] Backend unavailable; using mock service for deletePresentation(${id})`);
         return await mockService.deletePresentation(id);
       }
@@ -94,7 +95,7 @@ export const presentationService = {
     try {
       return await api.post('/render/preview', { markdown, ...options });
     } catch (err) {
-      if (USE_MOCK) {
+      if (USE_MOCK && shouldUseMockFallback(err)) {
         return await mockService.renderPreview(markdown, options);
       }
       throw err;

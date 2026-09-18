@@ -3,7 +3,7 @@
  * Dropdown menu for quickly inserting MARP presentation directives
  */
 import React, { useState, useRef, useEffect } from 'react';
-import { Sliders, Check } from 'lucide-react';
+import { Sliders } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
 
 export function DirectivesHelper({ onInsertDirective }) {

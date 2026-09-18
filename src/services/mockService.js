@@ -3,7 +3,6 @@
  * Provides fallback mock data and real-time generation simulation
  * when FastAPI backend is offline during frontend development/testing.
  */
-import { STARTER_TEMPLATES } from '../utils/mockData';
 import { getStoredPresentations, saveStoredPresentation, deleteStoredPresentation } from '../utils/storage';
 
 export const mockService = {
@@ -22,14 +21,14 @@ export const mockService = {
 
   async createPresentation(payload) {
     await new Promise((r) => setTimeout(r, 200));
+    const now = new Date().toISOString();
     const newPresentation = {
-      id: `deck-${Date.now().toString(36)}`,
+      id: `deck-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
       title: payload.title || 'Untitled Presentation',
       theme: payload.theme || 'default',
       markdown: payload.markdown || `--- \nmarp: true\ntheme: ${payload.theme || 'default'}\npaginate: true\n---\n\n# ${payload.title || 'New Presentation'}\n\n- Welcome to MARP Slide Studio`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ...payload,
+      createdAt: now,
+      updatedAt: now,
     };
     saveStoredPresentation(newPresentation);
     return newPresentation;

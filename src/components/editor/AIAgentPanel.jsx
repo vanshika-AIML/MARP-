@@ -3,9 +3,9 @@ import { AlertCircle, Bot, Sparkles } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Badge from '../ui/Badge';
-import { agentService } from '../../services/agentService';
+import GenerationVisual from '../presentation/GenerationVisual';
 
-export function AIAgentPanel({ onApplyMarkdown, wsStatus, onSimulateStream }) {
+export function AIAgentPanel({ onApplyMarkdown, wsStatus, wsEventState, onGenerate }) {
   const [prompt, setPrompt] = useState('');
   const [generationType, setGenerationType] = useState('slide');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,22 +18,10 @@ export function AIAgentPanel({ onApplyMarkdown, wsStatus, onSimulateStream }) {
     setIsSubmitting(true);
     setError(null);
     try {
-      if (wsStatus !== 'connected' && onSimulateStream) {
-        await onSimulateStream(prompt, (markdown) => {
-          onApplyMarkdown(markdown, generationType === 'deck');
-        }, () => {
-          setIsSubmitting(false);
-          setPrompt('');
-        }, generationType);
-      } else {
-        const result = generationType === 'slide'
-          ? await agentService.generateSlide(prompt)
-          : await agentService.generateContent(prompt);
-        const markdown = result?.generatedSlideMarkdown || result?.generatedMarkdown;
-        if (markdown) onApplyMarkdown(markdown, generationType === 'deck');
-        setIsSubmitting(false);
-        setPrompt('');
-      }
+      const markdown = await onGenerate(prompt, generationType);
+      onApplyMarkdown(markdown, generationType === 'deck');
+      setIsSubmitting(false);
+      setPrompt('');
     } catch (err) {
       setError(err.message || 'Generation failed. Please try again.');
       setIsSubmitting(false);
@@ -74,7 +62,7 @@ export function AIAgentPanel({ onApplyMarkdown, wsStatus, onSimulateStream }) {
         </div>
 
         <Input
-          label="Prompt"
+          id="studio-prompt" label="Prompt"
           placeholder="e.g. Explain an event-driven architecture with Kafka"
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
@@ -95,6 +83,8 @@ export function AIAgentPanel({ onApplyMarkdown, wsStatus, onSimulateStream }) {
             ))}
           </div>
         </div>
+
+        {isSubmitting && <GenerationVisual compact event={wsEventState} />}
 
         {error && (
           <div className="p-2.5 rounded-md bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">

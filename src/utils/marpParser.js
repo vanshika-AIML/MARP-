@@ -137,7 +137,7 @@ export function parseDirectivesList(lines) {
 /**
  * Extracts slide-specific directives comments: `<!-- _class: lead -->` or `<!-- paginate: true -->`
  */
-export function parseSlideDirectives(rawSlideText, globalDirectives) {
+export function parseSlideDirectives(rawSlideText) {
   const lines = rawSlideText.split(/\r?\n/);
   const directives = {};
   const cleanedLines = [];
@@ -182,4 +182,20 @@ export function getSlideIndexForLine(slides, lineNumber) {
     return slides.length - 1;
   }
   return 0;
+}
+
+export function splitFrontmatter(markdown = '') {
+  if (!markdown.startsWith('---')) return { frontmatter: '', body: markdown };
+  const end = markdown.indexOf('\n---', 3);
+  if (end === -1) return { frontmatter: '', body: markdown };
+  const separatorEnd = end + 4;
+  return {
+    frontmatter: markdown.slice(0, separatorEnd),
+    body: markdown.slice(separatorEnd),
+  };
+}
+
+export function rebuildPresentationMarkdown(frontmatter, slides) {
+  const body = slides.map((slide) => slide.raw.trim()).join('\n\n---\n\n');
+  return frontmatter ? `${frontmatter}\n\n${body}` : body;
 }

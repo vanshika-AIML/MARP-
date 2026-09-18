@@ -37,6 +37,8 @@ export function useWebSocket(customUrl = null, options = {}) {
   const wsRef = useRef(null);
   const reconnectCountRef = useRef(0);
   const reconnectTimerRef = useRef(null);
+  const manualCloseRef = useRef(false);
+  const socketIdRef = useRef(0);
 
   const wsUrl = `${(customUrl || DEFAULT_WS_URL).replace(/\/$/, '')}/ws/generation`;
 
@@ -71,12 +73,16 @@ export function useWebSocket(customUrl = null, options = {}) {
       return;
     }
 
+    manualCloseRef.current = false;
+    if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
     setStatus('connecting');
 
     try {
       const ws = new WebSocket(wsUrl);
+      const socketId = ++socketIdRef.current;
 
       ws.onopen = () => {
+        if (socketId !== socketIdRef.current) return;
         setStatus('connected');
         reconnectCountRef.current = 0;
         console.info(`[useWebSocket] Connected to ${wsUrl}`);
@@ -85,13 +91,16 @@ export function useWebSocket(customUrl = null, options = {}) {
       ws.onmessage = handleSocketMessage;
 
       ws.onerror = (err) => {
+        if (socketId !== socketIdRef.current) return;
         setStatus('error');
         console.warn('[useWebSocket] Connection error:', err);
       };
 
       ws.onclose = () => {
+        if (socketId !== socketIdRef.current) return;
         setStatus('disconnected');
-        if (reconnectCountRef.current < reconnectAttempts) {
+        wsRef.current = null;
+        if (!manualCloseRef.current && reconnectCountRef.current < reconnectAttempts) {
           reconnectCountRef.current += 1;
           reconnectTimerRef.current = setTimeout(() => {
             connect();
@@ -107,7 +116,11 @@ export function useWebSocket(customUrl = null, options = {}) {
   }, [wsUrl, reconnectAttempts, reconnectInterval, handleSocketMessage]);
 
   const disconnect = useCallback(() => {
+    manualCloseRef.current = true;
+    socketIdRef.current += 1;
+    reconnectCountRef.current = 0;
     if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+    reconnectTimerRef.current = null;
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;

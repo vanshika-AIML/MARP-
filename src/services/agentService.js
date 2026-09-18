@@ -4,6 +4,7 @@
  */
 import api from './api';
 import { mockService } from './mockService';
+import { shouldUseMockFallback } from './fallback';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_FALLBACK === 'true';
 
@@ -15,7 +16,7 @@ export const agentService = {
     try {
       return await api.post('/agent/generate-slide', { prompt, ...options });
     } catch (err) {
-      if (USE_MOCK) {
+      if (USE_MOCK && shouldUseMockFallback(err)) {
         console.info('[agentService] Backend unavailable; using mock slide generator');
         return await mockService.generateSlide(prompt, options);
       }
@@ -30,7 +31,7 @@ export const agentService = {
     try {
       return await api.post('/agent/generate-content', { prompt, context });
     } catch (err) {
-      if (USE_MOCK) {
+      if (USE_MOCK && shouldUseMockFallback(err)) {
         console.info('[agentService] Backend unavailable; using mock content generator');
         return await mockService.generateContent(prompt, context);
       }
@@ -49,7 +50,7 @@ export const agentService = {
         presentation_id: presentationId,
       });
     } catch (err) {
-      if (USE_MOCK) {
+      if (USE_MOCK && shouldUseMockFallback(err)) {
         return {
           status: 'success',
           refinedMarkdown: `\n<!-- _class: lead -->\n## Refined Slide (${instruction})\n\n- Improved clarity\n- Enhanced visual structure\n`,
@@ -66,7 +67,7 @@ export const agentService = {
     try {
       return await api.get(`/agent/tasks/${taskId}`);
     } catch (err) {
-      if (USE_MOCK) {
+      if (USE_MOCK && shouldUseMockFallback(err)) {
         return {
           task_id: taskId,
           status: 'completed',

@@ -13,8 +13,6 @@ import {
   Code2,
   Eye,
   Check,
-  RotateCw,
-  FolderOpen,
   Plus,
 } from 'lucide-react';
 import Button from '../ui/Button';
@@ -111,7 +109,7 @@ export function Navbar({
             <div className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
               {isSaving ? (
                 <>
-                  <RotateCw className="w-3 h-3 animate-spin text-sky-600" />
+                  <span className="save-pulse" aria-hidden="true" />
                   <span>Saving...</span>
                 </>
               ) : (

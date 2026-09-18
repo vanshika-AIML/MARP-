@@ -7,6 +7,7 @@
  * - Scalable aspect-ratio container (16:9)
  */
 import React, { useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { getTheme } from '../../utils/themeRegistry';
 
 /**
@@ -20,11 +21,13 @@ export function renderSlideMarkdownToHtml(markdown = '') {
   // Escape basic script injections
   html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
 
-  // Code blocks (triple backticks)
-  html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
-    return `<pre><code class="language-${lang}">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+  // Protect fenced code from the following Markdown substitutions.
+  const codeBlocks = [];
+  html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_match, lang, code) => {
+    const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    codeBlocks.push(`<pre><code class="language-${lang}">${escaped}</code></pre>`);
+    return `\uE000CODE${codeBlocks.length - 1}\uE001`;
   });
-
   // Inline code
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
 
@@ -103,6 +106,7 @@ export function renderSlideMarkdownToHtml(markdown = '') {
     const trimmed = line.trim();
     if (
       trimmed &&
+      !trimmed.startsWith('\uE000CODE') &&
       !trimmed.startsWith('<h') &&
       !trimmed.startsWith('<ul') &&
       !trimmed.startsWith('<ol') &&
@@ -119,7 +123,28 @@ export function renderSlideMarkdownToHtml(markdown = '') {
     }
   }
 
-  return finalized.join('\n');
+  return finalized.join('\n').replace(/\uE000CODE(\d+)\uE001/g, (_match, index) => codeBlocks[Number(index)] || '');
+}
+
+export function sanitizeSlideHtml(html = '') {
+  return DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true },
+    ADD_ATTR: ['target', 'rel', 'class'],
+  });
+}
+
+function getSlideLayout(content = '') {
+  const trimmed = content.trim();
+  const lineCount = trimmed.split(/\r?\n/).filter(Boolean).length;
+  if (/^#\s/.test(trimmed) && lineCount <= 4) return 'title';
+  if (/^>\s/m.test(trimmed)) return 'quote';
+  if (/```/.test(trimmed)) return 'code';
+  if (/^\|.*\|$/m.test(trimmed)) return 'data';
+  if (/!\[.*?\]\(/.test(trimmed)) return 'image';
+  if (/(?:^|\s)(?:\d{2,3}%|\$?\d+(?:\.\d+)?x|\d{1,3}(?:,\d{3})+)(?:\s|$)/m.test(trimmed)) return 'stats';
+  if (/^##\s/m.test(trimmed) && lineCount <= 3) return 'section';
+  if (/^(?:- |\d+\. )/m.test(trimmed)) return 'list';
+  return 'editorial';
 }
 
 function convertTableRowsToHtml(rows) {
@@ -166,16 +191,22 @@ export function SlideView({
   const footer = directives.footer;
   const paginate = directives.paginate !== false;
   const slideIndex = (slide?.index ?? 0) + 1;
+  const explicitLayout = slideClass.split(/\s+/).find((name) => ['title', 'section', 'quote', 'code', 'data', 'image', 'stats', 'list', 'editorial', 'columns'].includes(name));
+  const layout = explicitLayout || getSlideLayout(slide?.content || '');
+  const dense = (slide?.content || '').length > 1100 || (slide?.content || '').split('\n').filter(Boolean).length > 16;
 
   const renderedHtml = useMemo(() => {
-    return renderSlideMarkdownToHtml(slide?.content || '');
+    return sanitizeSlideHtml(renderSlideMarkdownToHtml(slide?.content || ''));
   }, [slide?.content]);
 
   const slideWrapperClasses = [
-    'marp-slide-wrapper',
+    'marp-slide-wrapper slide-enter',
     `marp-theme-${currentTheme}`,
     slideClass.includes('lead') ? 'slide-lead' : '',
     slideClass.includes('invert') ? 'slide-invert' : '',
+    `slide-layout-${layout}`,
+    `slide-variant-${(slide?.index || 0) % 3}`,
+    dense ? 'slide-dense' : '',
     className,
   ]
     .filter(Boolean)

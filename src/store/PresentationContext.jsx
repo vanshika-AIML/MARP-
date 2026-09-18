@@ -3,7 +3,7 @@
  * Maintains presentation document model, active slide, generation status, and preview status.
  */
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
-import { parseMarpPresentation } from '../utils/marpParser';
+import { parseMarpPresentation, rebuildPresentationMarkdown, splitFrontmatter } from '../utils/marpParser';
 import { STARTER_TEMPLATES, BLANK_DECK_MARKDOWN } from '../utils/mockData';
 import { presentationService } from '../services/presentationService';
 import {
@@ -30,6 +30,8 @@ const initialState = {
   isSaving: false,
   error: null,
   lastSavedAt: new Date().toISOString(),
+  editRevision: 0,
+  savedRevision: 0,
 };
 
 function presentationReducer(state, action) {
@@ -48,6 +50,8 @@ function presentationReducer(state, action) {
         isLoading: false,
         error: null,
         lastSavedAt: presentation.updatedAt || new Date().toISOString(),
+        editRevision: 0,
+        savedRevision: 0,
       };
     }
 
@@ -61,6 +65,7 @@ function presentationReducer(state, action) {
         slides: parsed.slides,
         theme: parsed.globalDirectives.theme || state.theme,
         activeSlide,
+        editRevision: state.editRevision + 1,
       };
     }
 
@@ -77,6 +82,7 @@ function presentationReducer(state, action) {
       return {
         ...state,
         title: action.payload.title,
+        editRevision: state.editRevision + 1,
       };
     }
 
@@ -95,6 +101,7 @@ function presentationReducer(state, action) {
         theme,
         markdown: updatedMarkdown,
         slides: parsed.slides,
+        editRevision: state.editRevision + 1,
       };
     }
 
@@ -130,6 +137,18 @@ function presentationReducer(state, action) {
       };
     }
 
+    case PRESENTATION_ACTIONS.MARK_SAVED: {
+      if (action.payload.revision !== state.editRevision) {
+        return { ...state, isSaving: false };
+      }
+      return {
+        ...state,
+        isSaving: false,
+        savedRevision: action.payload.revision,
+        lastSavedAt: action.payload.lastSavedAt,
+      };
+    }
+
     case PRESENTATION_ACTIONS.SET_ERROR: {
       return { ...state, error: action.payload, isLoading: false };
     }
@@ -148,34 +167,32 @@ export function PresentationProvider({ children, initialData = null }) {
 
   const saveTimeoutRef = useRef(null);
 
-  // Auto-save debounce effect (saves locally / through service after 1.2s of inactivity)
+  // Auto-save only revisions caused by user edits.
   useEffect(() => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    if (!state.id || state.editRevision === state.savedRevision) return undefined;
+
+    const revision = state.editRevision;
+    const data = { title: state.title, theme: state.theme, markdown: state.markdown };
 
     saveTimeoutRef.current = setTimeout(async () => {
-      if (state.id) {
-        dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: true } });
-        try {
-          await presentationService.updatePresentation(state.id, {
-            title: state.title,
-            theme: state.theme,
-            markdown: state.markdown,
-          });
-          dispatch({
-            type: PRESENTATION_ACTIONS.SET_SAVING,
-            payload: { isSaving: false, lastSavedAt: new Date().toISOString() },
-          });
-        } catch (err) {
-          console.warn('Auto-save warning:', err);
-          dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: false } });
-        }
+      dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: true } });
+      try {
+        await presentationService.updatePresentation(state.id, data);
+        dispatch({
+          type: PRESENTATION_ACTIONS.MARK_SAVED,
+          payload: { revision, lastSavedAt: new Date().toISOString() },
+        });
+      } catch (err) {
+        console.warn('Auto-save warning:', err);
+        dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: false } });
       }
     }, 1200);
 
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [state.markdown, state.title, state.theme, state.id]);
+  }, [state.markdown, state.title, state.theme, state.id, state.editRevision, state.savedRevision]);
 
   const updateMarkdown = useCallback((markdown) => {
     dispatch({ type: PRESENTATION_ACTIONS.UPDATE_MARKDOWN, payload: { markdown } });
@@ -214,7 +231,11 @@ export function PresentationProvider({ children, initialData = null }) {
   const createNewPresentation = useCallback(async (template = null) => {
     dispatch({ type: PRESENTATION_ACTIONS.SET_LOADING, payload: true });
     try {
-      const payload = template || {
+      const payload = template ? {
+        title: template.title,
+        theme: template.theme,
+        markdown: template.markdown,
+      } : {
         title: 'New Presentation',
         theme: 'default',
         markdown: BLANK_DECK_MARKDOWN,
@@ -240,11 +261,8 @@ export function PresentationProvider({ children, initialData = null }) {
     if (state.slides.length <= 1) return;
     const remainingSlides = state.slides.filter((_, idx) => idx !== slideIndex);
     // Reconstruct markdown
-    const fmHeader = state.markdown.startsWith('---')
-      ? state.markdown.slice(0, state.markdown.indexOf('---', 3) + 3)
-      : '';
-    const slidesBody = remainingSlides.map((s) => s.raw.trim()).join('\n\n---\n\n');
-    const reconstructed = fmHeader ? `${fmHeader}\n\n${slidesBody}` : slidesBody;
+    const { frontmatter } = splitFrontmatter(state.markdown);
+    const reconstructed = rebuildPresentationMarkdown(frontmatter, remainingSlides);
     updateMarkdown(reconstructed);
     setActiveSlide(Math.max(0, slideIndex - 1));
   }, [state.slides, state.markdown, updateMarkdown, setActiveSlide]);
@@ -252,8 +270,10 @@ export function PresentationProvider({ children, initialData = null }) {
   const duplicateSlide = useCallback((slideIndex) => {
     const slideToDup = state.slides[slideIndex];
     if (!slideToDup) return;
-    const duplicatedRaw = `\n\n---\n\n${slideToDup.raw.trim()}`;
-    const newMarkdown = `${state.markdown.trimEnd()}${duplicatedRaw}`;
+    const { frontmatter } = splitFrontmatter(state.markdown);
+    const nextSlides = [...state.slides];
+    nextSlides.splice(slideIndex + 1, 0, { ...slideToDup, raw: slideToDup.raw });
+    const newMarkdown = rebuildPresentationMarkdown(frontmatter, nextSlides);
     updateMarkdown(newMarkdown);
     setActiveSlide(slideIndex + 1);
   }, [state.slides, state.markdown, updateMarkdown, setActiveSlide]);

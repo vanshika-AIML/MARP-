@@ -8,7 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
-  Maximize2,
   ZoomIn,
   ZoomOut,
   RotateCcw,

@@ -9,8 +9,6 @@ import {
   X,
   Maximize2,
   Minimize2,
-  Play,
-  RotateCcw,
 } from 'lucide-react';
 import SlideView from '../components/presentation/SlideView';
 import useHotkeys from '../hooks/useHotkeys';

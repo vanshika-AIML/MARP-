@@ -9,12 +9,24 @@ export function Card({
   children,
   className = '',
   onClick,
+  ariaLabel,
   hoverable = false,
   selected = false,
+  style,
 }) {
   return (
     <div
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (onClick && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          onClick(event);
+        }
+      }}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={ariaLabel}
+      style={style}
       className={twMerge(
         clsx(
           'bg-white rounded-lg border border-slate-200 shadow-xs transition-all overflow-hidden text-left',

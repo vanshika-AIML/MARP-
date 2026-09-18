@@ -14,6 +14,8 @@ import StatusBar from '../components/layout/StatusBar';
 import GenerationOverlay from '../components/presentation/GenerationOverlay';
 import ExportModal from '../components/presentation/ExportModal';
 import PreviewPage from './PreviewPage';
+import { generatePresentation } from '../services/generationService';
+import { parseMarpPresentation } from '../utils/marpParser';
 
 export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRoute = false }) {
   const presentation = usePresentation();
@@ -64,7 +66,6 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRout
   const {
     status: wsStatus,
     eventState: wsEventState,
-    simulateGenerationStream,
   } = useWebSocket();
 
   // Document word/character statistics
@@ -86,9 +87,14 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRout
     } else {
       const newMarkdown = `${markdown.trimEnd()}${generated}`;
       updateMarkdown(newMarkdown);
-      setActiveSlide(slides.length);
+      setActiveSlide(parseMarpPresentation(newMarkdown).slides.length - 1);
     }
   };
+
+  const handleGenerate = useCallback(async (prompt, generationType) => {
+    const generatedMarkdown = await generatePresentation(prompt, generationType);
+    return generatedMarkdown;
+  }, []);
 
   // Keyboard shortcuts
   useHotkeys({
@@ -139,7 +145,8 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRout
         onZoomOut={() => setPreviewStatus({ zoom: Math.max(0.6, (previewStatus.zoom || 1.0) - 0.1) })}
         onZoomReset={() => setPreviewStatus({ zoom: 1.0 })}
         wsStatus={wsStatus}
-        onSimulateStream={simulateGenerationStream}
+        wsEventState={wsEventState}
+        onGenerate={handleGenerate}
         onApplyMarkdown={handleApplyAiGeneratedMarkdown}
       />
 
@@ -160,7 +167,7 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRout
         onApplyMarkdown={handleApplyAiGeneratedMarkdown}
         wsStatus={wsStatus}
         wsEventState={wsEventState}
-        onSimulateStream={simulateGenerationStream}
+        onGenerate={handleGenerate}
       />
 
       {/* Export Options Modal */}

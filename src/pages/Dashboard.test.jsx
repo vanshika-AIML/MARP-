@@ -1,0 +1,61 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import Dashboard from './Dashboard';
+import { ThemeProvider } from '../context/ThemeContext';
+import { presentationService } from '../services/presentationService';
+import { generatePresentation } from '../services/generationService';
+import { CUSTOM_TEMPLATES_KEY } from '../utils/templateCatalog';
+vi.mock('../services/presentationService', () => ({ presentationService: { listPresentations: vi.fn().mockResolvedValue([]) } }));
+vi.mock('../services/generationService', () => ({ generatePresentation: vi.fn() }));
+vi.mock('../hooks/useWebSocket', () => ({ default: () => ({ eventState: { type: 'idle' } }) }));
+afterEach(() => { cleanup(); window.localStorage.clear(); vi.clearAllMocks(); });
+const mount = (props = {}) => render(<MemoryRouter><ThemeProvider><Dashboard onOpenDeck={vi.fn()} onNewDeckWithTemplate={vi.fn()} {...props} /></ThemeProvider></MemoryRouter>);
+describe('Dashboard workspace', () => {
+  it('switches accessible sections in place and collapses the sidebar', async () => {
+    mount();
+    await screen.findByText('Your story starts with one slide.');
+    const collapse = screen.getByRole('button', { name: 'Collapse sidebar' });
+    fireEvent.click(collapse);
+    expect(screen.getByRole('button', { name: 'Expand sidebar' })).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Home' }), { key: 'ArrowDown' });
+    expect(screen.getByRole('tab', { name: 'Explore Templates' })).toHaveFocus();
+    expect(await screen.findByRole('button', { name: /Executive Professional/ })).toBeInTheDocument();
+    expect(screen.getByRole('tabpanel')).toHaveAttribute('id', 'panel-templates');
+    expect(presentationService.listPresentations).toHaveBeenCalledTimes(1);
+  });
+  it('reads a custom template, previews it and makes it available in the library', async () => {
+    const onCreate = vi.fn(); mount({ onNewDeckWithTemplate: onCreate });
+    fireEvent.click(screen.getByRole('tab', { name: 'Upload Custom Template' }));
+    fireEvent.change(screen.getByLabelText('Choose Markdown file'), { target: { files: [{ name: 'my-story.md', size: 100, text: vi.fn().mockResolvedValue('---\ntheme: editorial\n---\n# My story') }] } });
+    await screen.findByLabelText('Template name');
+    fireEvent.click(screen.getByRole('button', { name: 'Save template' }));
+    expect(JSON.parse(window.localStorage.getItem(CUSTOM_TEMPLATES_KEY))[0].theme).toBe('editorial');
+    fireEvent.click(screen.getByRole('tab', { name: 'Explore Templates' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Custom', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: /my-story Custom/ }));
+    await waitFor(() => expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ title: 'my-story', markdown: expect.stringContaining('# My story') })));
+  });
+  it('rejects unsupported uploads without attempting to process them', async () => {
+    mount(); fireEvent.click(screen.getByRole('tab', { name: 'Upload Custom Template' }));
+    const text = vi.fn();
+    fireEvent.change(screen.getByLabelText('Choose Markdown file'), { target: { files: [{ name: 'deck.pptx', size: 20, text }] } });
+    expect(await screen.findByRole('alert')).toHaveTextContent('Choose a MARP Markdown file');
+    expect(text).not.toHaveBeenCalled();
+  });
+  it('retains a generation request when switching sections, without inventing progress', async () => {
+    let resolve;
+    generatePresentation.mockReturnValue(new Promise((done) => { resolve = done; }));
+    const onCreate = vi.fn().mockResolvedValue({ id: 'new' }); mount({ onNewDeckWithTemplate: onCreate });
+    fireEvent.click(screen.getByRole('tab', { name: 'Create with AI' }));
+    fireEvent.change(screen.getByLabelText('What should your presentation make clear?'), { target: { value: 'Our next launch' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Generate presentation' }));
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Home' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Create with AI' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Making room for your ideas');
+    resolve('# Launch');
+    await waitFor(() => expect(onCreate).toHaveBeenCalledWith({ title: 'Our next launch', markdown: '# Launch' }));
+    expect(generatePresentation).toHaveBeenCalledTimes(1);
+  });
+});

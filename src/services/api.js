@@ -73,6 +73,9 @@ class ApiClient {
         timeoutError.isTimeout = true;
         throw timeoutError;
       }
+      if (err instanceof TypeError && !err.status) {
+        err.isNetworkError = true;
+      }
       throw err;
     }
   }

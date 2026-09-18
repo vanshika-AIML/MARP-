@@ -1,0 +1,21 @@
+/* Restore the appearance mode support that predated the last UI pass. */
+:root[data-theme='dark'] {
+  color-scheme: dark; --bg: #0b1220; --bg-secondary: #0f1928; --surface: #111b2a; --surface-elevated: #162337; --surface-hover: #1b2a3f;
+  --border: #26364b; --border-strong: #344962; --text-primary: #e7eef7; --text-secondary: #c1cede; --text-muted: #9aabc0; --text-inverse: #ffffff;
+  --accent: #55c3e8; --accent-hover: #2389b0; --accent-soft: #15384b; --input-bg: #0e1827; --code-bg: #0d1726;
+  --shadow-sm: 0 4px 14px #0003; --shadow-md: 0 10px 30px #0004; --shadow-lg: 0 24px 60px #0006;
+}
+[data-theme='dark'] body { background-color: var(--bg); color: var(--text-primary); }
+[data-theme='dark'] .bg-white { background-color: var(--surface) !important; color: var(--text-primary); }
+[data-theme='dark'] .bg-slate-50, [data-theme='dark'] .bg-slate-100, [data-theme='dark'] .bg-slate-50\/60, [data-theme='dark'] .bg-slate-100\/70 { background-color: var(--bg-secondary) !important; }
+[data-theme='dark'] .text-slate-900, [data-theme='dark'] .text-slate-800, [data-theme='dark'] .text-slate-700 { color: var(--text-primary) !important; }
+[data-theme='dark'] .text-slate-600 { color: var(--text-secondary) !important; }
+[data-theme='dark'] .text-slate-500, [data-theme='dark'] .text-slate-400 { color: var(--text-muted) !important; }
+[data-theme='dark'] .border-slate-100, [data-theme='dark'] .border-slate-200, [data-theme='dark'] .border-slate-300 { border-color: var(--border) !important; }
+[data-theme='dark'] input, [data-theme='dark'] textarea, [data-theme='dark'] select { background-color: var(--input-bg); color: var(--text-primary); border-color: var(--border); }
+[data-theme='dark'] input::placeholder, [data-theme='dark'] textarea::placeholder { color: var(--text-muted); }
+[data-theme='dark'] .cm-editor { background-color: var(--bg-surface) !important; color: var(--text-main) !important; }
+[data-theme='dark'] .cm-editor .cm-gutters { background-color: var(--bg-app) !important; color: var(--text-muted) !important; border-color: var(--border-subtle) !important; }
+[data-theme='dark'] .cm-editor .cm-activeLineGutter, [data-theme='dark'] .cm-editor .cm-activeLine { background-color: var(--bg-elevated) !important; }
+[data-theme='dark'] ::-webkit-scrollbar-thumb { background: #41536b; }
+[data-theme='dark'] .primary-cta { color: #082f49; }

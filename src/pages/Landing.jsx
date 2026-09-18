@@ -33,10 +33,10 @@ export default function Landing({ onCreate }) {
         const bounds = hero.getBoundingClientRect();
         const x = ((event.clientX - bounds.left) / bounds.width) - 0.5;
         const y = ((event.clientY - bounds.top) / bounds.height) - 0.5;
-        hero.style.setProperty('--hero-bg-x', `${(x * 10).toFixed(2)}px`);
-        hero.style.setProperty('--hero-bg-y', `${(y * 8).toFixed(2)}px`);
-        hero.style.setProperty('--hero-card-x', `${(x * -5).toFixed(2)}px`);
-        hero.style.setProperty('--hero-card-y', `${(y * -4).toFixed(2)}px`);
+        hero.style.setProperty('--hero-bg-x', `${(x * 18).toFixed(2)}px`);
+        hero.style.setProperty('--hero-bg-y', `${(y * 14).toFixed(2)}px`);
+        hero.style.setProperty('--hero-card-x', `${(x * -9).toFixed(2)}px`);
+        hero.style.setProperty('--hero-card-y', `${(y * -7).toFixed(2)}px`);
       });
     };
     const reset = () => {
@@ -49,7 +49,7 @@ export default function Landing({ onCreate }) {
       cancelAnimationFrame(scrollFrame);
       scrollFrame = requestAnimationFrame(() => {
         const top = Math.min(scroller?.scrollTop || window.scrollY, hero.offsetHeight);
-        hero.style.setProperty('--hero-scroll-y', `${(top * 0.045).toFixed(2)}px`);
+        hero.style.setProperty('--hero-scroll-y', `${(top * 0.07).toFixed(2)}px`);
       });
     };
     hero.addEventListener('pointermove', move, { passive: true });

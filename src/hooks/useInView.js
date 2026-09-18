@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 export function useInView(options = {}) {
   const ref = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
+  const { root = null, rootMargin = '0px', threshold = 0.2 } = options;
 
   useEffect(() => {
     if (!ref.current || !('IntersectionObserver' in window)) {
@@ -14,10 +15,10 @@ export function useInView(options = {}) {
         setIsVisible(true);
         observer.disconnect();
       }
-    }, { threshold: 0.2, ...options });
+    }, { root, rootMargin, threshold });
     observer.observe(ref.current);
     return () => observer.disconnect();
-  }, [options]);
+  }, [root, rootMargin, threshold]);
 
   return [ref, isVisible];
 }

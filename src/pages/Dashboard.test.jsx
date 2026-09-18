@@ -53,7 +53,7 @@ describe('Dashboard workspace', () => {
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'Home' }));
     fireEvent.click(screen.getByRole('tab', { name: 'Create with AI' }));
-    expect(screen.getByRole('status')).toHaveTextContent('Making room for your ideas');
+    expect(screen.getByRole('status')).toHaveTextContent('Assembling your presentation');
     resolve('# Launch');
     await waitFor(() => expect(onCreate).toHaveBeenCalledWith({ title: 'Our next launch', markdown: '# Launch' }));
     expect(generatePresentation).toHaveBeenCalledTimes(1);

@@ -40,7 +40,7 @@ export default function UploadTemplate({ onSaved }) {
     <UploadCloud size={38} /><h2>Bring your own starting point.</h2><p>Drop a MARP Markdown template here, or choose a file.<br />.md or .markdown · Up to 1 MB · Saved on this device</p>
     <label className="primary-cta upload-file">Choose Markdown file<input aria-label="Choose Markdown file" type="file" accept=".md,.markdown" disabled={processing} onChange={(event) => { readFile(event.target.files[0]); event.target.value = ''; }} /></label>
   </div>
-    {processing && <div role="status" className="upload-processing"><FileText size={24} /><div>Reading and preparing your template<span className="waiting-dots"><i /><i /><i /></span></div></div>}
+    {processing && <div role="status" className="upload-processing"><FileText size={24} /><div>Reading and preparing your template<span className="processing-line" aria-hidden="true"><i /></span></div></div>}
     {error && <p role="alert" className="ui-error">{error}</p>}
     {template && <form onSubmit={save} className="upload-review"><div className="template-preview"><SlideView slide={template.slides[0]} theme={template.theme} /></div><div><label htmlFor="template-name">Template name</label><input id="template-name" value={template.title} disabled={saved} onChange={(event) => setTemplate({ ...template, title: event.target.value })} /><p>{template.slides.length} slides · {template.theme} theme</p>{saved ? <p role="status" className="saved-message"><CheckCircle2 size={18} /> Saved. Find it in Explore Templates → Custom.</p> : <button type="submit" className="primary-cta" disabled={!template.title.trim()}>Save template</button>}</div></form>}
   </section>;

@@ -79,7 +79,7 @@ export const mockService = {
       taskId: `task-${Date.now().toString(36)}`,
       status: 'queued',
       prompt,
-      generatedSlideMarkdown: `\n\n---\n\n## 🤖 AI Generated: ${prompt}\n\n- Context-aware automated slide points\n- Formatted strictly according to MARP directives\n- High clarity and structured delivery\n`,
+      generatedSlideMarkdown: `\n\n---\n\n## AI Generated: ${prompt}\n\n- Context-aware automated slide points\n- Formatted strictly according to MARP directives\n- High clarity and structured delivery\n`,
     };
   },
 
@@ -101,7 +101,7 @@ footer: "Generated Presentation"
 
 ---
 
-## 🎯 Executive Strategy
+## Executive Strategy
 
 - Strategic objective aligned with user intent
 - High impact deliverables with clear milestones
@@ -111,7 +111,7 @@ footer: "Generated Presentation"
 
 <!-- _backgroundColor: #0f172a -->
 <!-- _color: #ffffff -->
-## 📊 Projected Results
+## Projected Results
 
 - **Performance**: 3.5x Faster authoring lifecycle
 - **Standardization**: 100% MARP compliant themes
@@ -119,7 +119,7 @@ footer: "Generated Presentation"
 
 ---
 
-# 🚀 Next Steps
+# Next Steps
 
 1. Review and refine slide directives
 2. Export to PDF or HTML

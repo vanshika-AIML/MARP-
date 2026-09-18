@@ -21,4 +21,3 @@ export function navigateTo(name, id = null) {
   window.history.pushState({}, '', path);
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
-

@@ -103,7 +103,7 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRout
   });
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-white">
+    <div className="editor-page h-full flex flex-col overflow-hidden bg-white">
       {/* Top Navigation */}
       <Navbar
         title={title}

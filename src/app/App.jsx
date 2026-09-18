@@ -79,4 +79,3 @@ export function App({ initialPresentation = null }) {
 }
 
 export default App;
-

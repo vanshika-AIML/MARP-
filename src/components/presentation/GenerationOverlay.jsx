@@ -4,7 +4,7 @@
  * to trigger slide synthesis via agentService / WebSocket.
  */
 import React, { useState } from 'react';
-import { Sparkles, Bot, AlertCircle } from 'lucide-react';
+import { PanelsTopLeft, Network, AlertCircle } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -61,7 +61,7 @@ export function GenerationOverlay({
         {/* WebSocket Connection Status */}
         <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200/80">
           <div className="flex items-center gap-2">
-            <Bot className="w-4 h-4 text-sky-600" />
+            <Network className="w-4 h-4 text-sky-600" />
             <span className="text-xs font-medium text-slate-700">Agent WebSocket</span>
           </div>
           <Badge
@@ -157,7 +157,7 @@ export function GenerationOverlay({
               <Button
                 variant="primary"
                 size="sm"
-                icon={Sparkles}
+                icon={PanelsTopLeft}
                 type="submit"
                 disabled={!prompt.trim() || isSubmitting}
                 loading={isSubmitting}

@@ -16,7 +16,6 @@
     "@codemirror/language-data": "^6.5.1",
     "@uiw/codemirror-theme-github": "^4.23.6",
     "@uiw/react-codemirror": "^4.23.6",
-    "canvas-confetti": "^1.9.3",
     "clsx": "^2.1.1",
     "dompurify": "^3.2.3",
     "lucide-react": "^0.468.0",

@@ -5,7 +5,7 @@ afterEach(cleanup);
 it('shows indeterminate activity without backend progress', () => {
   render(<GenerationVisual event={{ type: 'idle', progress: 0 }} />);
   expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-  expect(screen.getByRole('status')).toHaveTextContent('Making room for your ideas');
+  expect(screen.getByRole('status')).toHaveTextContent('Assembling your presentation');
 });
 it('shows only real active backend progress and ignores a previous completion', () => {
   const { rerender } = render(<GenerationVisual event={{ type: 'generating_slide', progress: 42, message: 'Building slide two', slideIndex: 1 }} />);

@@ -4,21 +4,36 @@ export default function GenerationVisual({ event, compact = false }) {
   const active = ['generating', 'generating_slide', 'rendering', 'outlining', 'styling'].includes(event?.type);
   const progress = active && typeof event?.progress === 'number' && Number.isFinite(event.progress)
     ? Math.max(0, Math.min(100, event.progress)) : null;
-  return <div className={`making-deck ${compact ? 'making-deck-compact' : ''}`} role="status" aria-live="polite">
-    <svg viewBox="0 0 240 150" className="deck-buddy" aria-hidden="true">
-      <ellipse cx="120" cy="133" rx="65" ry="7" fill="currentColor" opacity=".08" />
-      <g className="buddy-pages"><rect x="60" y="27" width="122" height="85" rx="6" fill="#e0f2fe" stroke="#7dd3fc" transform="rotate(-9 120 70)" />
-        <rect x="57" y="30" width="122" height="85" rx="6" fill="#ede9fe" stroke="#c4b5fd" transform="rotate(7 120 70)" /></g>
-      <g className="buddy-face"><rect x="56" y="34" width="128" height="88" rx="6" fill="#fff" stroke="#0284c7" strokeWidth="2" />
-        <rect x="69" y="47" width="48" height="6" rx="3" fill="#bae6fd" /><rect x="69" y="60" width="28" height="4" rx="2" fill="#ddd6fe" />
-        <circle cx="107" cy="84" r="4" fill="#0f172a" /><circle cx="139" cy="84" r="4" fill="#0f172a" />
-        <path d="M113 96 Q123 105 133 96" fill="none" stroke="#0284c7" strokeWidth="3" strokeLinecap="round" />
-        <circle cx="94" cy="93" r="5" fill="#fbcfe8" /><circle cx="152" cy="93" r="5" fill="#fbcfe8" /></g>
-      <g className="buddy-spark" fill="#fbbf24"><path d="m204 27 3 9 9 3-9 3-3 9-3-9-9-3 9-3z" /><path d="m33 69 2 6 6 2-6 2-2 6-2-6-6-2 6-2z" /></g>
+  const phase = progress === null ? 'indeterminate' : `phase-${Math.max(1, Math.min(4, Math.ceil(progress / 25)))}`;
+
+  return <div className={`making-deck ${compact ? 'making-deck-compact' : ''} ${phase}`} role="status" aria-live="polite" style={progress === null ? undefined : { '--generation-progress': progress / 100 }}>
+    <svg viewBox="0 0 280 170" className="deck-assembly" aria-hidden="true">
+      <defs>
+        <pattern id="assembly-grid" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M14 0H0V14" fill="none" stroke="currentColor" strokeOpacity=".09" /></pattern>
+        <linearGradient id="assembly-scan" x1="0" x2="1"><stop stopColor="currentColor" stopOpacity="0" /><stop offset=".5" stopColor="currentColor" stopOpacity=".42" /><stop offset="1" stopColor="currentColor" stopOpacity="0" /></linearGradient>
+      </defs>
+      <rect x="1" y="1" width="278" height="168" rx="10" className="assembly-surface" />
+      <rect x="1" y="1" width="278" height="168" rx="10" fill="url(#assembly-grid)" />
+      <path className="assembly-trace" d="M20 130C56 130 54 72 91 72s32 51 72 51 39-76 83-76" />
+      <g className="assembly-main-frame">
+        <rect x="48" y="33" width="144" height="94" rx="4" />
+        <path className="assembly-title" d="M65 54h58M65 65h83" />
+        <path className="assembly-copy" d="M65 84h48M65 93h38M65 102h44" />
+        <rect className="assembly-media" x="124" y="80" width="51" height="30" rx="2" />
+        <path className="assembly-media-line" d="m129 105 13-13 8 8 8-7 12 12" />
+      </g>
+      <g className="assembly-thumbnail thumbnail-one"><rect x="204" y="42" width="54" height="34" rx="2" /><path d="M211 51h22M211 58h35M211 66h15" /></g>
+      <g className="assembly-thumbnail thumbnail-two"><rect x="204" y="84" width="54" height="34" rx="2" /><path d="M211 93h30M211 100h18M237 102h14v9h-14z" /></g>
+      <g className="assembly-thumbnail thumbnail-three"><rect x="204" y="126" width="54" height="28" rx="2" /><path d="M211 135h25M211 142h36" /></g>
+      <rect className="assembly-scan" x="42" y="22" width="160" height="2" fill="url(#assembly-scan)" />
+      <circle className="assembly-node node-one" cx="20" cy="130" r="3" />
+      <circle className="assembly-node node-two" cx="91" cy="72" r="3" />
+      <circle className="assembly-node node-three" cx="163" cy="123" r="3" />
+      <circle className="assembly-node node-four" cx="246" cy="47" r="3" />
     </svg>
-    <p className="font-semibold">{active && event?.message ? event.message : 'Making room for your ideas…'}</p>
-    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{active && event?.slideIndex != null ? `Working on slide ${event.slideIndex + 1}` : 'Your presentation is being generated. You can stay right here.'}</p>
+    <p className="font-semibold">{active && event?.message ? event.message : 'Assembling your presentation…'}</p>
+    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{active && event?.slideIndex != null ? `Working on slide ${event.slideIndex + 1}` : 'Building the narrative, layout, and visual system.'}</p>
     {progress !== null ? <div className="real-progress" role="progressbar" aria-label="Generation progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ width: `${progress}%` }} /><small>{progress}%</small></div>
-      : <span className="waiting-dots" aria-label="Waiting for generation"><i /><i /><i /></span>}
+      : <span className="flowing-dots" aria-label="Waiting for generation"><i /><i /><i /></span>}
   </div>;
 }

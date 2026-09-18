@@ -3,14 +3,15 @@ import { ArrowUpRight } from 'lucide-react';
 import SlideView from '../presentation/SlideView';
 import { parseMarpPresentation } from '../../utils/marpParser';
 import { THEME_CATEGORIES } from '../../utils/themeRegistry';
-import { STARTER_TEMPLATES } from '../../utils/mockData';
 import { THEME_TEMPLATES } from '../../utils/templateCatalog';
+import { useMarpConfig } from '../../context/MarpConfigContext';
 
 export default function TemplatesPanel({ customTemplates, onCreate }) {
+  const { config } = useMarpConfig();
   const [category, setCategory] = useState('All');
   const [pending, setPending] = useState(null);
   const [error, setError] = useState('');
-  const templates = useMemo(() => [...customTemplates.map((item) => ({ ...item, category: 'Custom' })), ...STARTER_TEMPLATES.map((item) => ({ ...item, category: 'Starter' })), ...THEME_TEMPLATES], [customTemplates]);
+  const templates = useMemo(() => [...customTemplates.map((item) => ({ ...item, category: 'Custom' })), ...config.templates.filter((item) => item.active).map((item) => ({ ...item, title: item.name })), ...THEME_TEMPLATES.filter((item) => config.themes.some((theme) => theme.id === item.theme && theme.active))], [customTemplates, config.templates, config.themes]);
   const create = async (template) => {
     setPending(template.id); setError('');
     try { await onCreate(template); } catch (err) { setError(err.message); } finally { setPending(null); }

@@ -5,15 +5,12 @@ import SiteHeader from '../components/landing/SiteHeader';
 import FeatureTour from '../components/landing/FeatureTour';
 import CreateWithAI from '../components/dashboard/CreateWithAI';
 import useInView from '../hooks/useInView';
+import { useMarpConfig } from '../context/MarpConfigContext';
 
-const steps = [
-  [CircleDot, 'Idea', 'Start with a topic, a point of view, or a set of rough notes.'],
-  [Network, 'Structure', 'Shape the narrative into a clear sequence your audience can follow.'],
-  [PanelsTopLeft, 'Design', 'Apply a considered visual system, then refine every detail in Markdown.'],
-  [Presentation, 'Present', 'Preview the finished deck, enter presentation mode, and share it with confidence.'],
-];
+const stepIcons = [CircleDot, Network, PanelsTopLeft, Presentation];
 
 export default function Landing({ onCreate }) {
+  const { config } = useMarpConfig();
   const [timelineRef, visible] = useInView();
   const [aiRef, aiVisible] = useInView();
   const [footerRef, footerVisible] = useInView();
@@ -90,11 +87,11 @@ export default function Landing({ onCreate }) {
           <path d="M1036 159h40M1056 139v40" />
         </svg>
       </div>
-      <span className="eyebrow">Presentation intelligence for clear thinking</span>
-      <h1 className="hero-wordmark"><span className="hero-wordmark-mask"><span>MARP Studio</span></span></h1>
-      <p className="hero-tagline">Turn ideas into<br /><em>structured presentations.</em></p>
-      <p className="hero-description">AI direction, precise visual systems, and the freedom of Markdown.<br />One focused workspace from first thought to final slide.</p>
-      <div className="hero-actions"><button onClick={create} disabled={pending} className="primary-cta">{pending ? 'Opening your canvas…' : 'Create Presentation'}<ArrowUpRight size={18} /></button><a href="#learn" className="text-cta">Explore the workflow <ArrowDown size={15} /></a></div>
+      <span className="eyebrow">{config.landing.eyebrow}</span>
+      <h1 className="hero-wordmark"><span className="hero-wordmark-mask"><span>{config.landing.title}</span></span></h1>
+      <p className="hero-tagline">{config.landing.tagline}</p>
+      <p className="hero-description">{config.landing.description}</p>
+      <div className="hero-actions"><button onClick={create} disabled={pending} className="primary-cta">{pending ? 'Opening your canvas…' : config.landing.ctaLabel}<ArrowUpRight size={18} /></button><a href="#learn" className="text-cta">Explore the workflow <ArrowDown size={15} /></a></div>
       {error && <p role="alert" className="ui-error">{error}</p>}
       <div className="hero-system-visual" aria-hidden="true">
         <svg viewBox="0 0 1000 360" role="presentation">
@@ -124,11 +121,11 @@ export default function Landing({ onCreate }) {
       <div className="section-heading"><span className="eyebrow">A connected workflow</span><h2>From thought to presentation.</h2><p>Four deliberate stages, designed to keep the work moving without losing control.</p></div>
       <div className="timeline-path">
         <svg viewBox="0 0 1000 80" preserveAspectRatio="none" aria-hidden="true"><path className="system-flow-line" d="M80 40C205 8 292 72 414 40S620 8 738 40 858 72 920 40" /><path className="system-flow-tracer" d="M80 40C205 8 292 72 414 40S620 8 738 40 858 72 920 40" /></svg>
-        {steps.map(([Icon, title, description], i) => <article className="timeline-step" key={title} style={{ '--i': i }}><div className="timeline-icon"><Icon size={20} strokeWidth={1.5} /></div><span className="eyebrow">0{i + 1}</span><h3>{title}</h3><p>{description}</p></article>)}
+        {config.landing.steps.map((step, i) => { const Icon = stepIcons[i % stepIcons.length]; return <article className="timeline-step" key={`${step.title}-${i}`} style={{ '--i': i }}><div className="timeline-icon"><Icon size={20} strokeWidth={1.5} /></div><span className="eyebrow">0{i + 1}</span><h3>{step.title}</h3><p>{step.description}</p></article>; })}
       </div>
     </section>
-    <FeatureTour />
-    <div ref={aiRef} className={`landing-section landing-ai-section ${aiVisible ? 'is-visible' : ''}`} id="create-ai"><CreateWithAI onCreate={onCreate} /></div>
-    <footer ref={footerRef} className={`landing-footer ${footerVisible ? 'is-visible' : ''}`}><span>MARP Studio — Ideas, structured.</span><Link to="/dashboard">Open your dashboard <ArrowUpRight size={15} /></Link></footer>
+    {config.landing.featureTourVisible && config.featureFlags.learnWithVideo && <FeatureTour />}
+    {config.landing.aiSectionVisible && <div ref={aiRef} className={`landing-section landing-ai-section ${aiVisible ? 'is-visible' : ''}`} id="create-ai"><CreateWithAI onCreate={onCreate} /></div>}
+    {config.landing.footerVisible && <footer ref={footerRef} className={`landing-footer ${footerVisible ? 'is-visible' : ''}`}><span>{config.site.productName} — {config.site.footer}</span><Link to="/dashboard">Open your dashboard <ArrowUpRight size={15} /></Link></footer>}
   </main>;
 }

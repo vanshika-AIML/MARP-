@@ -44,4 +44,11 @@ export const THEME_REGISTRY = [
   makeTheme('gradient', 'Gradient', 'Creative', { background: '#eff6ff', surface: '#ffffff', primary: '#4f46e5', secondary: '#0891b2', accent: '#db2777', text: '#172554', muted: '#64748b' }),
 ];
 
-export const getTheme = (id) => THEME_REGISTRY.find((theme) => theme.id === id) || THEME_REGISTRY[0];
+export const getTheme = (id) => {
+  const base = THEME_REGISTRY.find((theme) => theme.id === id) || THEME_REGISTRY[0];
+  try {
+    const config = JSON.parse(window.localStorage.getItem('marp-admin-config-v1') || 'null');
+    const configured = config?.themes?.find((theme) => theme.id === base.id && theme.active !== false);
+    return configured ? { ...base, ...configured, colors: { ...base.colors, ...configured.colors }, fonts: { ...base.fonts, ...configured.fonts } } : base;
+  } catch { return base; }
+};

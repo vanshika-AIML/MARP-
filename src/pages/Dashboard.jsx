@@ -8,6 +8,7 @@ import SlideView from '../components/presentation/SlideView';
 import { presentationService } from '../services/presentationService';
 import { parseMarpPresentation } from '../utils/marpParser';
 import { readCustomTemplates } from '../utils/templateCatalog';
+import { useMarpConfig } from '../context/MarpConfigContext';
 const TemplatesPanel = lazy(() => import('../components/dashboard/TemplatesPanel'));
 const sections = [
   ['home', Home, 'Home', 'Your next great story starts here.'],
@@ -16,6 +17,7 @@ const sections = [
   ['upload', UploadCloud, 'Upload Custom Template', 'Your own Markdown. Your own point of view.'],
 ];
 export default function Dashboard({ onOpenDeck, onNewDeckWithTemplate }) {
+  const { config } = useMarpConfig();
   const [tab, setTab] = useState('home');
   const [collapsed, setCollapsed] = useState(() => window.matchMedia?.('(max-width: 760px)').matches || false);
   const [presentations, setPresentations] = useState([]);
@@ -37,17 +39,19 @@ export default function Dashboard({ onOpenDeck, onNewDeckWithTemplate }) {
   const remove = (deck) => { if (window.confirm(`Delete ${deck.title}?`)) run(deck.id, async () => { await presentationService.deletePresentation(deck.id); await fetchDecks(); }); };
   const onTabKey = (event, index) => {
     let next;
-    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') next = (index + 1) % sections.length;
-    if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') next = (index + sections.length - 1) % sections.length;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') next = (index + 1) % configuredSections.length;
+    if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') next = (index + configuredSections.length - 1) % configuredSections.length;
     if (event.key === 'Home') next = 0;
     if (event.key === 'End') next = sections.length - 1;
-    if (next !== undefined) { event.preventDefault(); setTab(sections[next][0]); tabRefs.current[next]?.focus(); }
+    if (next !== undefined) { event.preventDefault(); setTab(configuredSections[next][0]); tabRefs.current[next]?.focus(); }
   };
-  const active = sections.find(([id]) => tab === id);
+  const configuredSections = sections.map(([id, Icon, fallbackLabel, fallbackDescription]) => [id, Icon, config.dashboard.labels[id] || fallbackLabel, config.dashboard.descriptions[id] || fallbackDescription]).filter(([id]) => config.dashboard.visibleSections[id] && (id === 'templates' ? config.featureFlags.exploreTemplates : id === 'ai' ? config.featureFlags.createWithAI : id === 'upload' ? config.featureFlags.uploadTemplate : true)).sort((a, b) => config.dashboard.sectionOrder.indexOf(a[0]) - config.dashboard.sectionOrder.indexOf(b[0]));
+  const active = configuredSections.find(([id]) => tab === id) || configuredSections[0];
   const filtered = presentations.filter((deck) => deck.title?.toLowerCase().includes(query.toLowerCase()));
+  useEffect(() => { if (!config.dashboard.visibleSections[tab]) setTab(config.dashboard.defaultSection); }, [config.dashboard.defaultSection, config.dashboard.visibleSections, tab]);
   return <div className="dashboard-app"><SiteHeader /><div className={`dashboard-layout ${collapsed ? 'sidebar-collapsed' : ''}`}>
     <aside className="dashboard-sidebar" aria-label="Dashboard sidebar"><div className="sidebar-top"><span className="sidebar-label eyebrow">Workspace</span><button onClick={() => setCollapsed(!collapsed)} aria-expanded={!collapsed} aria-controls="dashboard-tabs" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>{collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}</button></div>
-      <nav id="dashboard-tabs" role="tablist" aria-label="Dashboard sections" aria-orientation="vertical">{sections.map(([id, Icon, label], i) => <button key={id} ref={(element) => { tabRefs.current[i] = element; }} role="tab" id={`tab-${id}`} aria-controls={`panel-${id}`} aria-selected={tab === id} tabIndex={tab === id ? 0 : -1} onKeyDown={(event) => onTabKey(event, i)} onClick={() => setTab(id)} title={label}><Icon size={20} /><span className="sidebar-label">{label}</span></button>)}</nav>
+      <nav id="dashboard-tabs" role="tablist" aria-label="Dashboard sections" aria-orientation="vertical">{configuredSections.map(([id, Icon, label], i) => <button key={id} ref={(element) => { tabRefs.current[i] = element; }} role="tab" id={`tab-${id}`} aria-controls={`panel-${id}`} aria-selected={tab === id} tabIndex={tab === id ? 0 : -1} onKeyDown={(event) => onTabKey(event, i)} onClick={() => setTab(id)} title={label}><Icon size={20} /><span className="sidebar-label">{label}</span></button>)}</nav>
       <div className="sidebar-foot sidebar-label"><span className="sidebar-system-mark" aria-hidden="true"><i /><i /><i /></span><p>A focused space for<br />your next presentation.</p></div>
     </aside>
     <main className="dashboard-main"><div className="dashboard-heading"><div><span className="eyebrow">MARP Studio / Workspace</span><h1>{tab === 'home' ? 'Dashboard' : active[2]}</h1><p>{active[3]}</p></div>{tab === 'home' && <button className="primary-cta" disabled={!!busy} onClick={() => run('new', () => onNewDeckWithTemplate(null))}><Plus size={18} />{busy === 'new' ? 'Creating…' : 'Create Presentation'}</button>}</div>

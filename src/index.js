@@ -47,6 +47,7 @@ export { mockService } from './services/mockService';
 // Hooks
 export { usePresentation } from './hooks/usePresentation';
 export { useTheme, ThemeProvider } from './context/ThemeContext';
+export { useMarpConfig, MarpConfigProvider } from './context/MarpConfigContext';
 export { useEditor } from './hooks/useEditor';
 export { useWebSocket } from './hooks/useWebSocket';
 export { useHotkeys } from './hooks/useHotkeys';

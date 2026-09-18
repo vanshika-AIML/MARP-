@@ -6,6 +6,7 @@ import React, { createContext, useContext, useReducer, useEffect, useCallback, u
 import { parseMarpPresentation, rebuildPresentationMarkdown, splitFrontmatter } from '../utils/marpParser';
 import { STARTER_TEMPLATES, BLANK_DECK_MARKDOWN } from '../utils/mockData';
 import { presentationService } from '../services/presentationService';
+import { readMarpConfig } from '../config/marpConfig';
 import {
   PRESENTATION_ACTIONS,
   INITIAL_GENERATION_STATUS,
@@ -231,14 +232,15 @@ export function PresentationProvider({ children, initialData = null }) {
   const createNewPresentation = useCallback(async (template = null) => {
     dispatch({ type: PRESENTATION_ACTIONS.SET_LOADING, payload: true });
     try {
+      const defaultTheme = readMarpConfig().ai.defaultTheme || 'default';
       const payload = template ? {
         title: template.title,
         theme: template.theme,
         markdown: template.markdown,
       } : {
         title: 'New Presentation',
-        theme: 'default',
-        markdown: BLANK_DECK_MARKDOWN,
+        theme: defaultTheme,
+        markdown: BLANK_DECK_MARKDOWN.replace(/theme: default/, `theme: ${defaultTheme}`),
       };
       const created = await presentationService.createPresentation(payload);
       dispatch({ type: PRESENTATION_ACTIONS.SET_PRESENTATION, payload: { presentation: created } });

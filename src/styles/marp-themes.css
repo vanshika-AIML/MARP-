@@ -9,22 +9,26 @@
 .marp-slide-wrapper h1, .marp-slide-wrapper h2, .marp-slide-wrapper h3 {
   font-family: var(--theme-heading-font, Inter), system-ui, sans-serif;
 }
-.marp-slide-wrapper h1 { color: var(--theme-primary, #0369a1); }
-.marp-slide-wrapper h2 { color: var(--theme-text, #0f172a); }
-.marp-slide-wrapper p, .marp-slide-wrapper li { color: var(--theme-secondary, #334155); }
-.marp-slide-wrapper pre { background: var(--theme-surface, #f1f5f9); border-color: color-mix(in srgb, var(--theme-primary, #0284c7) 20%, transparent); }
-.marp-slide-wrapper blockquote { border-color: var(--theme-accent, #0284c7); }
+.marp-slide-wrapper h1 { color: var(--theme-primary, #0369a1); font-weight: 800; font-size: 2.75rem; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 0.5em; }
+.marp-slide-wrapper h2 { color: var(--theme-text, #0f172a); font-weight: 700; font-size: 1.8rem; margin-top: 0.5em; margin-bottom: 0.5em; }
+.marp-slide-wrapper h3 { color: var(--theme-secondary, #475569); font-weight: 600; font-size: 1.4rem; margin-bottom: 0.4em; }
+.marp-slide-wrapper p, .marp-slide-wrapper li { color: var(--theme-secondary, #334155); font-size: 1.125rem; line-height: 1.6; margin-bottom: 0.6em; }
+.marp-slide-wrapper pre { background: var(--theme-surface, #f1f5f9); border-radius: var(--theme-radius, 8px); padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; border: 1px solid color-mix(in srgb, var(--theme-primary, #0284c7) 20%, transparent); overflow-x: auto; margin: 1rem 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+.marp-slide-wrapper blockquote { border-left: 4px solid var(--theme-accent, #0284c7); padding-left: 1.5rem; margin: 1.5rem 0; font-style: italic; color: color-mix(in srgb, var(--theme-secondary, #475569) 80%, black); font-size: 1.25rem; font-weight: 500; }
+.marp-slide-wrapper ul { list-style-type: disc; padding-left: 1.5rem; }
+.marp-slide-wrapper ol { list-style-type: decimal; padding-left: 1.5rem; }
+.marp-slide-wrapper img { border-radius: var(--theme-radius, 8px); box-shadow: var(--theme-shadow, 0 10px 25px rgba(0,0,0,0.1)); max-height: 400px; display: block; margin: 1rem auto; }
 
 /* Base Slide Container System */
 .marp-slide-wrapper {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background-color: #ffffff;
-  color: #1e293b;
+  background-color: var(--theme-background, #ffffff);
+  color: var(--theme-text, #1e293b);
   overflow: hidden;
   box-sizing: border-box;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--theme-body-font, 'Inter'), system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   display: flex;
   flex-direction: column;
@@ -46,87 +50,104 @@
 
 /* MARP Default Theme */
 .marp-theme-default {
-  background-color: #ffffff;
-  color: #0f172a;
+  background-image: linear-gradient(to bottom right, var(--theme-background), var(--theme-surface));
 }
-.marp-theme-default h1 {
-  font-size: 2.25em;
-  font-weight: 700;
-  color: #0369a1;
-  margin-bottom: 0.4em;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+
+/* Executive Theme - Highly Professional */
+.marp-theme-executive {
+  border-top: 8px solid var(--theme-primary);
+  background-image: radial-gradient(circle at top right, #ffffff, var(--theme-background));
 }
-.marp-theme-default h2 {
-  font-size: 1.6em;
-  font-weight: 600;
-  color: #0f172a;
-  margin-top: 0.3em;
-  margin-bottom: 0.3em;
-  line-height: 1.2;
+.marp-theme-executive h1 {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--theme-accent);
+  padding-bottom: 0.25em;
+  display: inline-block;
 }
-.marp-theme-default h3 {
-  font-size: 1.25em;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 0.3em;
+.marp-theme-executive .marp-slide-footer {
+  border-top: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
+  padding-top: 0.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-.marp-theme-default p, .marp-theme-default ul, .marp-theme-default ol {
-  font-size: 1em;
-  color: #334155;
-  margin-bottom: 0.5em;
+
+/* Cyber Theme - Futuristic & Neon */
+.marp-theme-cyber {
+  background-image: 
+    linear-gradient(rgba(11, 16, 32, 0.9), rgba(11, 16, 32, 0.9)),
+    linear-gradient(90deg, rgba(103, 232, 249, 0.05) 1px, transparent 1px),
+    linear-gradient(rgba(103, 232, 249, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
 }
-.marp-theme-default ul {
-  list-style-type: disc;
-  padding-left: 1.5em;
-}
-.marp-theme-default ol {
-  list-style-type: decimal;
-  padding-left: 1.5em;
-}
-.marp-theme-default li {
-  margin-bottom: 0.3em;
-}
-.marp-theme-default pre {
-  background-color: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 0.6em 0.8em;
+.marp-theme-cyber h1 {
+  color: var(--theme-primary);
+  text-shadow: 0 0 10px var(--theme-primary), 0 0 20px var(--theme-primary);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85em;
-  overflow-x: auto;
-  margin: 0.5em 0;
+  text-transform: uppercase;
 }
-.marp-theme-default code {
-  font-family: 'JetBrains Mono', monospace;
-  background-color: #f1f5f9;
-  padding: 0.15em 0.35em;
-  border-radius: 4px;
-  font-size: 0.9em;
-  color: #0284c7;
+.marp-theme-cyber h2 { color: var(--theme-accent); }
+.marp-theme-cyber h3 { color: var(--theme-secondary); }
+
+/* --- Advanced Layout Support --- */
+
+.marp-split-layout {
+  display: flex !important;
+  flex-direction: row;
 }
-.marp-theme-default blockquote {
-  border-left: 4px solid #0284c7;
-  padding-left: 1em;
-  color: #64748b;
-  font-style: italic;
-  margin: 0.5em 0;
+
+.marp-split-bg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
 }
-.marp-theme-default table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0.6em 0;
-  font-size: 0.9em;
+
+.marp-slide-content {
+  position: relative;
+  z-index: 2;
 }
-.marp-theme-default th, .marp-theme-default td {
-  border: 1px solid #cbd5e1;
-  padding: 0.4em 0.7em;
-  text-align: left;
+.marp-theme-cyber pre {
+  border: 1px solid var(--theme-primary);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
-.marp-theme-default th {
-  background-color: #f8fafc;
-  font-weight: 600;
+
+
+
+/* Glass Theme - Glassmorphism */
+.marp-theme-glass {
+  background: linear-gradient(135deg, #e8f1f5, #b4d8e7);
 }
+.marp-theme-glass .marp-slide-content {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  margin: 4%;
+  padding: 6%;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+}
+.marp-theme-glass h1 {
+  background: -webkit-linear-gradient(45deg, var(--theme-primary), var(--theme-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Terminal Theme - Hacker Style */
+.marp-theme-terminal {
+  font-family: 'IBM Plex Mono', monospace;
+}
+.marp-theme-terminal h1, .marp-theme-terminal h2, .marp-theme-terminal h3, .marp-theme-terminal p, .marp-theme-terminal li {
+  font-family: 'IBM Plex Mono', monospace;
+}
+.marp-theme-terminal h1::before { content: "> "; color: var(--theme-accent); }
+.marp-theme-terminal p::before { content: "$ "; color: var(--theme-secondary); opacity: 0.5; }
+.marp-theme-terminal pre { border: none; border-left: 2px solid var(--theme-primary); border-radius: 0; }
 
 /* MARP Gaia Theme */
 .marp-theme-gaia {
@@ -248,3 +269,140 @@
   color: #94a3b8;
   font-feature-settings: "tnum";
 }
+
+/* ============================================================
+   Theme-Specific Styling Overrides
+   All colors come from CSS custom properties set by SlideView.
+   These rules add unique visual character per theme.
+   ============================================================ */
+
+/* --- Neobrutalism --- */
+.marp-theme-neobrutalism {
+  border: 6px solid #000;
+  box-shadow: 12px 12px 0px #000;
+}
+.marp-theme-neobrutalism h1 {
+  background-color: var(--theme-accent, #ff6b6b);
+  color: #000 !important;
+  padding: 0.4rem 0.8rem;
+  border: 4px solid #000;
+  box-shadow: 6px 6px 0px #000;
+  display: inline-block;
+}
+.marp-theme-neobrutalism h2 { color: var(--theme-text, #000) !important; font-weight: 900; text-transform: uppercase; }
+.marp-theme-neobrutalism h3 { color: var(--theme-secondary, #333) !important; }
+.marp-theme-neobrutalism p, .marp-theme-neobrutalism li { color: var(--theme-text, #000) !important; }
+.marp-theme-neobrutalism blockquote {
+  border: 3px solid #000;
+  box-shadow: 4px 4px 0px #000;
+  background: var(--theme-surface, #fff);
+  color: #000 !important;
+  font-weight: 700;
+  border-radius: 0;
+}
+.marp-theme-neobrutalism pre {
+  border: 3px solid #000;
+  box-shadow: 4px 4px 0px #000;
+  border-radius: 0;
+}
+
+/* --- Dracula --- */
+.marp-theme-dracula {
+  background-color: #282a36 !important;
+}
+.marp-theme-dracula h1 { color: #bd93f9 !important; }
+.marp-theme-dracula h2 { color: #50fa7b !important; }
+.marp-theme-dracula h3 { color: #8be9fd !important; }
+.marp-theme-dracula p, .marp-theme-dracula li { color: #f8f8f2 !important; }
+.marp-theme-dracula blockquote { color: #f1fa8c !important; border-left-color: #ff79c6; }
+.marp-theme-dracula pre { background: #1e1f29 !important; color: #f8f8f2 !important; border-color: #44475a !important; }
+.marp-theme-dracula code { color: #50fa7b; }
+
+/* --- Nord --- */
+.marp-theme-nord {
+  background-color: #2e3440 !important;
+}
+.marp-theme-nord h1 { color: #88c0d0 !important; }
+.marp-theme-nord h2 { color: #81a1c1 !important; }
+.marp-theme-nord h3 { color: #5e81ac !important; }
+.marp-theme-nord p, .marp-theme-nord li { color: #d8dee9 !important; }
+.marp-theme-nord blockquote { color: #ebcb8b !important; border-left-color: #88c0d0; }
+.marp-theme-nord pre { background: #3b4252 !important; color: #eceff4 !important; border-color: #4c566a !important; }
+
+/* --- Monokai --- */
+.marp-theme-monokai {
+  background-color: #272822 !important;
+}
+.marp-theme-monokai h1 { color: #f92672 !important; }
+.marp-theme-monokai h2 { color: #a6e22e !important; }
+.marp-theme-monokai h3 { color: #e6db74 !important; }
+.marp-theme-monokai p, .marp-theme-monokai li { color: #f8f8f2 !important; }
+.marp-theme-monokai blockquote { color: #66d9ef !important; border-left-color: #f92672; }
+.marp-theme-monokai pre { background: #1e1f1c !important; color: #f8f8f2 !important; border-color: #49483e !important; }
+
+/* --- Github --- */
+.marp-theme-github h1 { color: #24292e !important; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }
+.marp-theme-github h2 { color: #24292e !important; }
+.marp-theme-github p, .marp-theme-github li { color: #24292e !important; }
+.marp-theme-github blockquote { color: #6a737d !important; border-left-color: #dfe2e5; }
+.marp-theme-github pre { background: #f6f8fa !important; border-color: #e1e4e8 !important; }
+
+/* --- Solarized --- */
+.marp-theme-solarized {
+  background-color: #fdf6e3 !important;
+}
+.marp-theme-solarized h1 { color: #268bd2 !important; }
+.marp-theme-solarized h2 { color: #2aa198 !important; }
+.marp-theme-solarized h3 { color: #b58900 !important; }
+.marp-theme-solarized p, .marp-theme-solarized li { color: #586e75 !important; }
+.marp-theme-solarized blockquote { color: #657b83 !important; border-left-color: #268bd2; }
+.marp-theme-solarized pre { background: #eee8d5 !important; color: #657b83 !important; }
+
+/* --- Synthwave --- */
+.marp-theme-synthwave {
+  background: linear-gradient(180deg, #1a1033 0%, #2b213a 40%, #3d1f5c 100%) !important;
+}
+.marp-theme-synthwave h1 { color: #f89d28 !important; text-shadow: 0 0 12px rgba(248, 157, 40, 0.6); font-weight: 900; }
+.marp-theme-synthwave h2 { color: #f92aad !important; text-shadow: 0 0 8px rgba(249, 42, 173, 0.4); }
+.marp-theme-synthwave h3 { color: #67e8f9 !important; }
+.marp-theme-synthwave p, .marp-theme-synthwave li { color: #e0d4f5 !important; }
+.marp-theme-synthwave strong { color: #f89d28 !important; }
+.marp-theme-synthwave blockquote { color: #f92aad !important; border-left-color: #f89d28; background: rgba(249, 42, 173, 0.08); }
+.marp-theme-synthwave pre { background: #170d2e !important; color: #67e8f9 !important; border-color: #f92aad !important; box-shadow: 0 0 15px rgba(249, 42, 173, 0.2); }
+
+/* --- Academic --- */
+.marp-theme-academic {
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+.marp-theme-academic h1 { font-variant: small-caps; color: var(--theme-primary, #1e3a8a) !important; }
+.marp-theme-academic h2 { color: var(--theme-text, #1e293b) !important; }
+.marp-theme-academic p, .marp-theme-academic li { color: var(--theme-text, #333) !important; font-family: 'Georgia', serif; }
+.marp-theme-academic blockquote { color: var(--theme-secondary, #555) !important; }
+
+/* --- Creative --- */
+.marp-theme-creative {
+  background: linear-gradient(135deg, #ff6b81 0%, #ff9a76 50%, #ffc94d 100%) !important;
+}
+.marp-theme-creative h1 { color: #fff !important; text-shadow: 2px 2px 0px rgba(0,0,0,0.15); font-weight: 900; }
+.marp-theme-creative h2 { color: #fff !important; }
+.marp-theme-creative h3 { color: rgba(255,255,255,0.85) !important; }
+.marp-theme-creative p, .marp-theme-creative li { color: #fff !important; }
+.marp-theme-creative blockquote { color: #fff !important; border-left-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.15); }
+.marp-theme-creative pre { background: rgba(0,0,0,0.2) !important; color: #fff !important; border: none !important; }
+
+/* --- Minimal --- */
+.marp-theme-minimal h1, .marp-theme-minimal h2 { font-weight: 300; letter-spacing: 0.05em; color: var(--theme-text, #111) !important; }
+.marp-theme-minimal h3 { font-weight: 300; color: var(--theme-secondary, #555) !important; }
+.marp-theme-minimal p, .marp-theme-minimal li { color: var(--theme-text, #333) !important; font-weight: 300; }
+
+/* --- Darkmode --- */
+.marp-theme-darkmode {
+  background-color: #121212 !important;
+}
+.marp-theme-darkmode h1 { color: #ffffff !important; }
+.marp-theme-darkmode h2 { color: #e0e0e0 !important; }
+.marp-theme-darkmode h3 { color: #bdbdbd !important; }
+.marp-theme-darkmode p, .marp-theme-darkmode li { color: #e0e0e0 !important; }
+.marp-theme-darkmode blockquote { color: #bdbdbd !important; border-left-color: #bb86fc; }
+.marp-theme-darkmode pre { background: #1e1e1e !important; color: #e0e0e0 !important; border-color: #333 !important; }
+

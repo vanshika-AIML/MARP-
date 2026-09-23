@@ -3,11 +3,13 @@ import { AlertCircle, Bot, Sparkles } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Badge from '../ui/Badge';
+import { Select } from '../ui/Select';
 import { agentService } from '../../services/agentService';
 
 export function AIAgentPanel({ onApplyMarkdown, wsStatus, onSimulateStream }) {
   const [prompt, setPrompt] = useState('');
   const [generationType, setGenerationType] = useState('slide');
+  const [theme, setTheme] = useState('default');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -20,17 +22,17 @@ export function AIAgentPanel({ onApplyMarkdown, wsStatus, onSimulateStream }) {
     try {
       if (wsStatus !== 'connected' && onSimulateStream) {
         await onSimulateStream(prompt, (markdown) => {
-          onApplyMarkdown(markdown, generationType === 'deck');
+          onApplyMarkdown(markdown, generationType === 'deck', theme);
         }, () => {
           setIsSubmitting(false);
           setPrompt('');
         }, generationType);
       } else {
         const result = generationType === 'slide'
-          ? await agentService.generateSlide(prompt)
-          : await agentService.generateContent(prompt);
-        const markdown = result?.generatedSlideMarkdown || result?.generatedMarkdown;
-        if (markdown) onApplyMarkdown(markdown, generationType === 'deck');
+          ? await agentService.generateSlide(prompt, { theme })
+          : await agentService.generateContent(prompt, { theme });
+        const markdown = result?.markdown || result?.generatedSlideMarkdown || result?.generatedMarkdown;
+        if (markdown) onApplyMarkdown(markdown, generationType === 'deck', theme);
         setIsSubmitting(false);
         setPrompt('');
       }
@@ -78,6 +80,29 @@ export function AIAgentPanel({ onApplyMarkdown, wsStatus, onSimulateStream }) {
           placeholder="e.g. Explain an event-driven architecture with Kafka"
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
+        />
+
+        <Select
+          label="Design Theme"
+          value={theme}
+          onChange={(e) => setTheme(e.target.value)}
+          options={[
+            { label: 'Default', value: 'default' },
+            { label: 'Gaia', value: 'gaia' },
+            { label: 'Uncover', value: 'uncover' },
+            { label: 'Neobrutalism', value: 'neobrutalism' },
+            { label: 'Dracula', value: 'dracula' },
+            { label: 'Nord', value: 'nord' },
+            { label: 'Monokai', value: 'monokai' },
+            { label: 'Github', value: 'github' },
+            { label: 'Solarized', value: 'solarized' },
+            { label: 'Synthwave', value: 'synthwave' },
+            { label: 'Executive', value: 'executive' },
+            { label: 'Academic', value: 'academic' },
+            { label: 'Creative', value: 'creative' },
+            { label: 'Minimal', value: 'minimal' },
+            { label: 'Darkmode', value: 'darkmode' },
+          ]}
         />
 
         <div>

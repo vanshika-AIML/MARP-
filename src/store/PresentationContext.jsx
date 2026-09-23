@@ -22,6 +22,7 @@ const initialState = {
   title: initialPresentation.title,
   theme: parsedInitial.globalDirectives.theme || initialPresentation.theme || 'default',
   markdown: initialPresentation.markdown,
+  frontmatterRaw: parsedInitial.frontmatterRaw,
   slides: parsedInitial.slides,
   activeSlide: 0,
   generationStatus: { ...INITIAL_GENERATION_STATUS },
@@ -43,6 +44,7 @@ function presentationReducer(state, action) {
         title: presentation.title || 'Untitled Presentation',
         theme: parsed.globalDirectives.theme || presentation.theme || 'default',
         markdown: presentation.markdown,
+        frontmatterRaw: parsed.frontmatterRaw,
         slides: parsed.slides,
         activeSlide: 0,
         isLoading: false,
@@ -58,6 +60,7 @@ function presentationReducer(state, action) {
       return {
         ...state,
         markdown,
+        frontmatterRaw: parsed.frontmatterRaw,
         slides: parsed.slides,
         theme: parsed.globalDirectives.theme || state.theme,
         activeSlide,
@@ -83,17 +86,23 @@ function presentationReducer(state, action) {
     case PRESENTATION_ACTIONS.SET_THEME: {
       const { theme } = action.payload;
       // Update theme inside markdown frontmatter if exists, or prepend
-      let updatedMarkdown = state.markdown;
+      let updatedMarkdown = state.markdown || '';
       if (updatedMarkdown.includes('theme:')) {
-        updatedMarkdown = updatedMarkdown.replace(/theme:\s*[a-zA-Z0-9_-]+/g, `theme: ${theme}`);
+        updatedMarkdown = updatedMarkdown.replace(/theme:\s*[a-zA-Z0-9_-]+/gi, `theme: ${theme}`);
       } else {
         updatedMarkdown = `---\nmarp: true\ntheme: ${theme}\npaginate: true\n---\n\n${updatedMarkdown}`;
       }
+      
+      // Strip hallucinated global colors that break themes
+      updatedMarkdown = updatedMarkdown.replace(/^backgroundColor:\s*.*$/gim, '');
+      updatedMarkdown = updatedMarkdown.replace(/^color:\s*.*$/gim, '');
+
       const parsed = parseMarpPresentation(updatedMarkdown);
       return {
         ...state,
         theme,
         markdown: updatedMarkdown,
+        frontmatterRaw: parsed.frontmatterRaw,
         slides: parsed.slides,
       };
     }
@@ -134,6 +143,23 @@ function presentationReducer(state, action) {
       return { ...state, error: action.payload, isLoading: false };
     }
 
+    case 'UPDATE_SLIDE': {
+      const { index, newRawContent } = action.payload;
+      const { slides, frontmatterRaw } = state;
+      const newSlidesRaw = slides.map((s, i) => i === index ? newRawContent : s.raw);
+      const slidesBody = newSlidesRaw.filter(Boolean).join('\n\n---\n\n');
+      const reconstructed = frontmatterRaw ? `${frontmatterRaw}\n\n${slidesBody}` : slidesBody;
+      const parsed = parseMarpPresentation(reconstructed);
+      
+      return {
+        ...state,
+        markdown: reconstructed,
+        frontmatterRaw: parsed.frontmatterRaw,
+        slides: parsed.slides,
+        theme: parsed.globalDirectives.theme || state.theme,
+      };
+    }
+
     default:
       return state;
   }
@@ -143,6 +169,7 @@ export function PresentationProvider({ children, initialData = null }) {
   const [state, dispatch] = useReducer(presentationReducer, initialData ? {
     ...initialState,
     ...initialData,
+    frontmatterRaw: parseMarpPresentation(initialData.markdown || '').frontmatterRaw,
     slides: parseMarpPresentation(initialData.markdown || '').slides,
   } : initialState);
 
@@ -179,6 +206,10 @@ export function PresentationProvider({ children, initialData = null }) {
 
   const updateMarkdown = useCallback((markdown) => {
     dispatch({ type: PRESENTATION_ACTIONS.UPDATE_MARKDOWN, payload: { markdown } });
+  }, []);
+
+  const updateSlide = useCallback((index, newRawContent) => {
+    dispatch({ type: 'UPDATE_SLIDE', payload: { index, newRawContent } });
   }, []);
 
   const setActiveSlide = useCallback((index) => {
@@ -228,23 +259,38 @@ export function PresentationProvider({ children, initialData = null }) {
     }
   }, []);
 
-  const addSlide = useCallback((customContent = '') => {
+  const addSlide = useCallback((customContent = '', newTheme = null) => {
+    let updatedMarkdown = state.markdown || '';
+
+    // Apply new theme if provided, and strip hallucinated colors
+    if (newTheme) {
+      if (updatedMarkdown.includes('theme:')) {
+        updatedMarkdown = updatedMarkdown.replace(/theme:\s*[a-zA-Z0-9_-]+/gi, `theme: ${newTheme}`);
+      } else {
+        updatedMarkdown = `---\nmarp: true\ntheme: ${newTheme}\npaginate: true\n---\n\n${updatedMarkdown}`;
+      }
+      // Strip any hallucinated global colors that break themes
+      updatedMarkdown = updatedMarkdown.replace(/^backgroundColor:\s*.*$/gim, '');
+      updatedMarkdown = updatedMarkdown.replace(/^color:\s*.*$/gim, '');
+    }
+
     const defaultNewSlide = `\n\n---\n\n## Slide Title\n\n- Bullet point 1\n- Bullet point 2\n`;
-    const newMarkdown = `${state.markdown.trimEnd()}${customContent || defaultNewSlide}`;
-    updateMarkdown(newMarkdown);
+    const newMarkdown = `${updatedMarkdown.trimEnd()}${customContent || defaultNewSlide}`;
+    
     const parsed = parseMarpPresentation(newMarkdown);
+    dispatch({
+      type: PRESENTATION_ACTIONS.UPDATE_MARKDOWN,
+      payload: { markdown: newMarkdown },
+    });
     setActiveSlide(parsed.slides.length - 1);
-  }, [state.markdown, updateMarkdown, setActiveSlide]);
+  }, [state.markdown, setActiveSlide]);
 
   const deleteSlide = useCallback((slideIndex) => {
     if (state.slides.length <= 1) return;
     const remainingSlides = state.slides.filter((_, idx) => idx !== slideIndex);
-    // Reconstruct markdown
-    const fmHeader = state.markdown.startsWith('---')
-      ? state.markdown.slice(0, state.markdown.indexOf('---', 3) + 3)
-      : '';
+    // Reconstruct markdown using stored frontmatter
     const slidesBody = remainingSlides.map((s) => s.raw.trim()).join('\n\n---\n\n');
-    const reconstructed = fmHeader ? `${fmHeader}\n\n${slidesBody}` : slidesBody;
+    const reconstructed = state.frontmatterRaw ? `${state.frontmatterRaw}\n\n${slidesBody}` : slidesBody;
     updateMarkdown(reconstructed);
     setActiveSlide(Math.max(0, slideIndex - 1));
   }, [state.slides, state.markdown, updateMarkdown, setActiveSlide]);
@@ -255,7 +301,7 @@ export function PresentationProvider({ children, initialData = null }) {
     const duplicatedRaw = `\n\n---\n\n${slideToDup.raw.trim()}`;
     const newMarkdown = `${state.markdown.trimEnd()}${duplicatedRaw}`;
     updateMarkdown(newMarkdown);
-    setActiveSlide(slideIndex + 1);
+    setActiveSlide(state.slides.length);
   }, [state.slides, state.markdown, updateMarkdown, setActiveSlide]);
 
   const value = {
@@ -271,6 +317,7 @@ export function PresentationProvider({ children, initialData = null }) {
     addSlide,
     deleteSlide,
     duplicateSlide,
+    updateSlide,
   };
 
   return (

@@ -17,9 +17,9 @@ export function Card({
       onClick={onClick}
       className={twMerge(
         clsx(
-          'bg-white rounded-lg border border-slate-200 shadow-xs transition-all overflow-hidden text-left',
-          hoverable ? 'hover:border-slate-300 hover:shadow-md cursor-pointer' : '',
-          selected ? 'border-sky-500 ring-2 ring-sky-500/20' : '',
+          'bg-white rounded-none border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all overflow-hidden text-left',
+          hoverable ? 'hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] cursor-pointer' : '',
+          selected ? 'bg-[#ffd32a]' : '',
           className
         )
       )}

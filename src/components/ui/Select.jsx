@@ -29,8 +29,8 @@ export function Select({
           onChange={onChange}
           className={twMerge(
             clsx(
-              'appearance-none w-full bg-white border border-slate-200 rounded-md py-1.5 pl-3 pr-8 text-xs font-medium text-slate-800 shadow-sm cursor-pointer transition-colors',
-              'focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20',
+              'appearance-none w-full bg-white border-2 border-black rounded-none py-1.5 pl-3 pr-8 text-xs font-bold text-black shadow-[4px_4px_0px_rgba(0,0,0,1)] cursor-pointer transition-all',
+              'focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_rgba(0,0,0,1)]',
               className
             )
           )}

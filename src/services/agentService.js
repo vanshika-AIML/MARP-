@@ -26,13 +26,13 @@ export const agentService = {
   /**
    * Generate a full slide deck from a topic / prompt
    */
-  async generateContent(prompt, context = '') {
+  async generateContent(prompt, options = {}) {
     try {
-      return await api.post('/agent/generate-content', { prompt, context });
+      return await api.post('/agent/generate-content', { prompt, ...options });
     } catch (err) {
       if (USE_MOCK) {
         console.info('[agentService] Backend unavailable; using mock content generator');
-        return await mockService.generateContent(prompt, context);
+        return await mockService.generateContent(prompt, options.context || '');
       }
       throw err;
     }

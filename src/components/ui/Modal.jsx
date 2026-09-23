@@ -35,7 +35,7 @@ export function Modal({
 
       {/* Modal Dialog Content */}
       <div
-        className={`relative w-full ${maxWidth} bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-10 animate-in zoom-in-95 duration-150 text-left`}
+        className={`relative w-full ${maxWidth} bg-white rounded-none shadow-[8px_8px_0px_rgba(0,0,0,1)] border-4 border-black overflow-hidden z-10 animate-in zoom-in-95 duration-150 text-left`}
       >
         {/* Header */}
         {(title || showClose) && (
@@ -47,7 +47,7 @@ export function Modal({
             {showClose && (
               <button
                 onClick={onClose}
-                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                className="p-1 rounded-none border-2 border-transparent hover:border-black hover:bg-[#ffd32a] text-black transition-all"
                 title="Close"
               >
                 <X className="w-4 h-4" />

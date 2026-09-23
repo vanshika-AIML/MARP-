@@ -42,6 +42,17 @@ export const THEME_REGISTRY = [
   makeTheme('terminal', 'Terminal', 'Technical', { background: '#07130d', surface: '#0b2115', primary: '#86efac', secondary: '#4ade80', accent: '#fef08a', text: '#dcfce7', muted: '#86a894', radius: '4px' }, { heading: 'IBM Plex Mono', body: 'IBM Plex Mono' }),
   makeTheme('bold', 'Bold', 'Business', { background: '#fff1f2', surface: '#ffffff', primary: '#be123c', secondary: '#7f1d1d', accent: '#f59e0b', text: '#4c0519', muted: '#9f5268' }),
   makeTheme('gradient', 'Gradient', 'Creative', { background: '#eff6ff', surface: '#ffffff', primary: '#4f46e5', secondary: '#0891b2', accent: '#db2777', text: '#172554', muted: '#64748b' }),
+  // AI Panel Themes
+  makeTheme('neobrutalism', 'Neobrutalism', 'Creative', { background: '#ffd32a', surface: '#fff', primary: '#ff6b6b', secondary: '#333', accent: '#ff6b6b', text: '#000000', muted: '#555' }),
+  makeTheme('dracula', 'Dracula', 'Dark', { background: '#282a36', surface: '#1e1f29', primary: '#bd93f9', secondary: '#8be9fd', accent: '#50fa7b', text: '#f8f8f2', muted: '#6272a4' }),
+  makeTheme('nord', 'Nord', 'Dark', { background: '#2e3440', surface: '#3b4252', primary: '#88c0d0', secondary: '#81a1c1', accent: '#ebcb8b', text: '#d8dee9', muted: '#4c566a' }),
+  makeTheme('monokai', 'Monokai', 'Dark', { background: '#272822', surface: '#1e1f1c', primary: '#f92672', secondary: '#a6e22e', accent: '#e6db74', text: '#f8f8f2', muted: '#75715e' }),
+  makeTheme('github', 'Github', 'Minimal', { background: '#ffffff', surface: '#f6f8fa', primary: '#0969da', secondary: '#24292e', accent: '#cf222e', text: '#24292e', muted: '#6a737d' }),
+  makeTheme('solarized', 'Solarized', 'Minimal', { background: '#fdf6e3', surface: '#eee8d5', primary: '#268bd2', secondary: '#2aa198', accent: '#b58900', text: '#586e75', muted: '#93a1a1' }),
+  makeTheme('synthwave', 'Synthwave', 'Dark', { background: '#2b213a', surface: '#170d2e', primary: '#f89d28', secondary: '#f92aad', accent: '#67e8f9', text: '#e0d4f5', muted: '#8b7faa' }),
+  makeTheme('academic', 'Academic', 'Academic', { background: '#ffffff', surface: '#f8f8f8', primary: '#1e3a8a', secondary: '#374151', accent: '#b45309', text: '#1f2937', muted: '#6b7280' }, { heading: 'Georgia', body: 'Georgia' }),
+  makeTheme('creative', 'Creative', 'Creative', { background: '#ff6b81', surface: 'rgba(255,255,255,0.15)', primary: '#fff', secondary: 'rgba(255,255,255,0.85)', accent: '#ffc94d', text: '#ffffff', muted: 'rgba(255,255,255,0.6)' }),
+  makeTheme('darkmode', 'Darkmode', 'Dark', { background: '#121212', surface: '#1e1e1e', primary: '#bb86fc', secondary: '#03dac6', accent: '#cf6679', text: '#e0e0e0', muted: '#888' }),
 ];
 
 export const getTheme = (id) => THEME_REGISTRY.find((theme) => theme.id === id) || THEME_REGISTRY[0];

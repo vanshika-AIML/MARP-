@@ -9,7 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 class ApiClient {
   constructor(baseUrl = API_BASE_URL) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
-    this.timeoutMs = 15000;
+    this.timeoutMs = 60000;
   }
 
   setBaseUrl(newUrl) {
@@ -45,8 +45,16 @@ class ApiClient {
         } catch {
           errorData = { detail: response.statusText };
         }
+        let errorMsg = errorData.detail || errorData.message || `HTTP ${response.status}`;
+        if (typeof errorMsg === 'object') {
+          try {
+            errorMsg = errorMsg[0].msg || JSON.stringify(errorMsg);
+          } catch (e) {
+            errorMsg = JSON.stringify(errorMsg);
+          }
+        }
         
-        const error = new Error(errorData.detail || errorData.message || `HTTP ${response.status}`);
+        const error = new Error(errorMsg);
         error.status = response.status;
         error.data = errorData;
         throw error;

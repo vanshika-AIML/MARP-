@@ -8,6 +8,7 @@ import { Sparkles, Bot, AlertCircle } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import Select from '../ui/Select';
 import { ProgressBar } from '../ui/Spinner';
 import Badge from '../ui/Badge';
 import { agentService } from '../../services/agentService';
@@ -22,6 +23,7 @@ export function GenerationOverlay({
 }) {
   const [prompt, setPrompt] = useState('');
   const [generationType, setGenerationType] = useState('slide'); // 'slide' | 'deck'
+  const [theme, setTheme] = useState('default');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -44,7 +46,7 @@ export function GenerationOverlay({
           prompt,
           (generatedMarkdown) => {
             if (onApplyMarkdown) {
-              onApplyMarkdown(generatedMarkdown, generationType === 'deck');
+              onApplyMarkdown(generatedMarkdown, generationType === 'deck', theme);
             }
           },
           () => {
@@ -59,14 +61,16 @@ export function GenerationOverlay({
       } else {
         // Direct Service invocation fallback
         if (generationType === 'slide') {
-          const res = await agentService.generateSlide(prompt);
-          if (res?.generatedSlideMarkdown && onApplyMarkdown) {
-            onApplyMarkdown(res.generatedSlideMarkdown, false);
+          const res = await agentService.generateSlide(prompt, { theme });
+          const slideMarkdown = res?.markdown || res?.generatedSlideMarkdown;
+          if (slideMarkdown && onApplyMarkdown) {
+            onApplyMarkdown(slideMarkdown, false, theme);
           }
         } else {
-          const res = await agentService.generateContent(prompt);
-          if (res?.generatedMarkdown && onApplyMarkdown) {
-            onApplyMarkdown(res.generatedMarkdown, true);
+          const res = await agentService.generateContent(prompt, { theme });
+          const contentMarkdown = res?.markdown || res?.generatedMarkdown;
+          if (contentMarkdown && onApplyMarkdown) {
+            onApplyMarkdown(contentMarkdown, true, theme);
           }
         }
         setIsSubmitting(false);
@@ -140,14 +144,40 @@ export function GenerationOverlay({
               </div>
             </div>
 
-            <div>
-              <Input
-                label="Topic or Instruction"
-                placeholder="e.g. Microservices event sourcing architecture with Kafka and Redis"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                autoFocus
-              />
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-2">
+                <Input
+                  label="Topic or Instruction"
+                  placeholder="e.g. Microservices event sourcing architecture"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="col-span-1 flex flex-col justify-end">
+                <Select
+                  label="Design Theme"
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value)}
+                  options={[
+                    { label: 'Default', value: 'default' },
+                    { label: 'Gaia', value: 'gaia' },
+                    { label: 'Uncover', value: 'uncover' },
+                    { label: 'Neobrutalism', value: 'neobrutalism' },
+                    { label: 'Dracula', value: 'dracula' },
+                    { label: 'Nord', value: 'nord' },
+                    { label: 'Monokai', value: 'monokai' },
+                    { label: 'Github', value: 'github' },
+                    { label: 'Solarized', value: 'solarized' },
+                    { label: 'Synthwave', value: 'synthwave' },
+                    { label: 'Executive', value: 'executive' },
+                    { label: 'Academic', value: 'academic' },
+                    { label: 'Creative', value: 'creative' },
+                    { label: 'Minimal', value: 'minimal' },
+                    { label: 'Darkmode', value: 'darkmode' },
+                  ]}
+                />
+              </div>
             </div>
 
             {/* Quick Prompt Ideas */}

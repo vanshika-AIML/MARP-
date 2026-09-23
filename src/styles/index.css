@@ -6,14 +6,14 @@
 
 @layer base {
   :root {
-    --bg-app: #f8fafc;
+    --bg-app: #ffffff;
     --bg-surface: #ffffff;
-    --border-subtle: #e2e8f0;
-    --border-strong: #cbd5e1;
-    --text-main: #0f172a;
-    --text-muted: #64748b;
-    --accent: #0284c7;
-    --accent-hover: #0369a1;
+    --border-subtle: #000000;
+    --border-strong: #000000;
+    --text-main: #000000;
+    --text-muted: #111111;
+    --accent: #1e90ff;
+    --accent-hover: #3742fa;
   }
 
   body {

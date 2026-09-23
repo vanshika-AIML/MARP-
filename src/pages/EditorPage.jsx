@@ -34,6 +34,7 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRout
     addSlide,
     deleteSlide,
     duplicateSlide,
+    updateSlide,
   } = presentation;
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -79,14 +80,16 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRout
     setPreviewStatus({ viewMode: mode });
   };
 
-  const handleApplyAiGeneratedMarkdown = (generated, isFullDeck = false) => {
+  const handleApplyAiGeneratedMarkdown = (generated, isFullDeck = false, selectedTheme = 'default') => {
     if (isFullDeck) {
+      // Full deck: the backend already returns complete markdown with frontmatter.
+      // Just replace the entire document with it.
       updateMarkdown(generated);
       setActiveSlide(0);
     } else {
-      const newMarkdown = `${markdown.trimEnd()}${generated}`;
-      updateMarkdown(newMarkdown);
-      setActiveSlide(slides.length);
+      // Single slide: append the generated slide to the existing presentation.
+      // Also update theme in the frontmatter if the user selected a different one.
+      addSlide(generated, selectedTheme);
     }
   };
 
@@ -123,8 +126,8 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRout
         onDuplicateSlide={duplicateSlide}
         onDeleteSlide={deleteSlide}
         onOpenAiModal={() => setIsAiModalOpen(true)}
-        markdown={markdown}
-        onMarkdownChange={updateMarkdown}
+        markdown={slides[activeSlide]?.raw || ''}
+        onMarkdownChange={(newRaw) => updateSlide(activeSlide, newRaw)}
         onEditorReady={setEditorView}
         onEditorUpdate={(update) => handleEditorUpdate(update, slides)}
         onFormat={insertFormat}

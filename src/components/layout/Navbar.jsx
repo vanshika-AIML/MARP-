@@ -52,18 +52,18 @@ export function Navbar({
   ];
 
   return (
-    <header className="h-12 bg-white border-b border-slate-200/90 flex items-center justify-between px-3.5 select-none z-20">
+    <header className="h-14 bg-[#1e90ff] border-b-4 border-black flex items-center justify-between px-4 select-none z-20 shadow-[0px_4px_0px_rgba(0,0,0,1)]">
       {/* Left: Brand & Navigation */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <button
           type="button"
           onClick={onOpenDashboard}
-          className="flex items-center gap-2 text-slate-800 hover:text-sky-600 transition-colors font-semibold text-xs"
+          className="flex items-center gap-2 transition-all font-black text-xs hover:translate-x-[2px] hover:translate-y-[2px]"
         >
-          <div className="p-1.5 bg-sky-50 text-sky-600 rounded-md border border-sky-200/60">
+          <div className="p-1.5 bg-white text-black border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]">
             <Presentation className="w-4 h-4" />
           </div>
-          <span className="hidden sm:inline font-bold tracking-tight">MARP Studio</span>
+          <span className="hidden sm:inline font-black tracking-tight text-lg text-black bg-[#ffd32a] border-2 border-black px-2 shadow-[2px_2px_0px_rgba(0,0,0,1)]">MARP Studio</span>
         </button>
 
         <div className="w-[1px] h-4 bg-slate-200" />
@@ -91,7 +91,7 @@ export function Navbar({
                 onBlur={handleTitleSubmit}
                 onKeyDown={(e) => e.key === 'Enter' && handleTitleSubmit()}
                 autoFocus
-                className="text-xs font-semibold text-slate-900 bg-slate-100 border border-sky-400 rounded px-2 py-0.5 focus:outline-none"
+                className="text-xs font-bold text-black bg-white border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] px-2 py-0.5 focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px]"
               />
             ) : (
               <button
@@ -100,7 +100,7 @@ export function Navbar({
                   setTempTitle(title);
                   setIsEditingTitle(true);
                 }}
-                className="text-xs font-semibold text-slate-900 hover:bg-slate-100 px-2 py-1 rounded max-w-xs truncate transition-colors"
+                className="text-xs font-bold text-black bg-white border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-[#ffd32a] px-2 py-1 max-w-xs truncate transition-all hover:translate-x-[2px] hover:translate-y-[2px]"
                 title="Click to rename"
               >
                 {title}
@@ -108,15 +108,15 @@ export function Navbar({
             )}
 
             {/* Auto-Save Status */}
-            <div className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
+            <div className="text-[11px] text-white flex items-center gap-1 font-black bg-black px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
               {isSaving ? (
                 <>
-                  <RotateCw className="w-3 h-3 animate-spin text-sky-600" />
+                  <RotateCw className="w-3 h-3 animate-spin text-[#ffd32a]" />
                   <span>Saving...</span>
                 </>
               ) : (
                 <>
-                  <Check className="w-3 h-3 text-emerald-500" />
+                  <Check className="w-3 h-3 text-[#2ed573]" />
                   <span>Saved</span>
                 </>
               )}
@@ -156,7 +156,7 @@ export function Navbar({
             size="xs"
             icon={Sparkles}
             onClick={onOpenAiModal}
-            className="text-sky-700 bg-sky-50/70 border-sky-200/80 hover:bg-sky-100"
+            className="text-black bg-[#ffd32a] border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:bg-white"
           >
             AI Agent
           </Button>

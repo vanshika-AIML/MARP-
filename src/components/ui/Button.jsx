@@ -19,15 +19,15 @@ export function Button({
   onClick,
   ...props
 }) {
-  const baseStyles = 'inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/20 disabled:opacity-50 disabled:pointer-events-none rounded-md select-none';
+  const baseStyles = 'inline-flex items-center justify-center font-bold transition-all focus:outline-none focus:ring-2 focus:ring-black disabled:opacity-50 disabled:pointer-events-none rounded-none select-none';
 
   const variants = {
-    primary: 'bg-sky-600 text-white hover:bg-sky-700 active:bg-sky-800 shadow-sm border border-sky-600/30',
-    secondary: 'bg-white text-slate-700 hover:bg-slate-50 active:bg-slate-100 border border-slate-200 shadow-sm',
-    outline: 'bg-transparent text-slate-700 hover:bg-slate-100 border border-slate-300',
-    ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200',
-    danger: 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200',
-    subtle: 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-transparent',
+    primary: 'bg-[#ff4757] text-white border-2 border-black hover:bg-[#ff6b81] shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]',
+    secondary: 'bg-[#ffd32a] text-black border-2 border-black hover:bg-[#ffdd59] shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]',
+    outline: 'bg-white text-black border-2 border-black hover:bg-gray-100 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]',
+    ghost: 'bg-transparent text-black border-2 border-transparent hover:bg-white hover:border-black hover:shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:-translate-x-[2px] hover:-translate-y-[2px] active:shadow-none active:translate-x-[0px] active:translate-y-[0px]',
+    danger: 'bg-rose-500 text-white border-2 border-black hover:bg-rose-600 shadow-[4px_4px_0px_rgba(0,0,0,1)]',
+    subtle: 'bg-[#1e90ff] text-white border-2 border-black hover:bg-[#70a1ff] shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]',
   };
 
   const sizes = {

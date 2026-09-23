@@ -8,6 +8,7 @@ export function parseMarpPresentation(rawMarkdown = '') {
   if (!rawMarkdown) {
     return {
       globalDirectives: { theme: 'default', paginate: false },
+      frontmatterRaw: '',
       slides: [
         {
           index: 0,
@@ -23,6 +24,7 @@ export function parseMarpPresentation(rawMarkdown = '') {
 
   const lines = rawMarkdown.split(/\r?\n/);
   let globalDirectives = { theme: 'default', paginate: false, marp: true };
+  let frontmatterRaw = '';
   let startIndex = 0;
 
   // 1. Check for YAML Frontmatter at the very top: `---` ... `---`
@@ -37,6 +39,7 @@ export function parseMarpPresentation(rawMarkdown = '') {
 
     if (frontmatterEnd !== -1) {
       const fmLines = lines.slice(1, frontmatterEnd);
+      frontmatterRaw = lines.slice(0, frontmatterEnd + 1).join('\n');
       globalDirectives = { ...globalDirectives, ...parseDirectivesList(fmLines) };
       startIndex = frontmatterEnd + 1;
     }
@@ -102,6 +105,7 @@ export function parseMarpPresentation(rawMarkdown = '') {
 
   return {
     globalDirectives,
+    frontmatterRaw,
     slides,
   };
 }

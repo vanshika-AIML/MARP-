@@ -1,0 +1,43 @@
+[project]
+name = "marp-studio-backend"
+version = "0.1.0"
+description = "MARP Studio API infrastructure"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi[standard-no-fastapi-cloud-cli]>=0.116.1,<1",
+    "pydantic-settings>=2.8,<3",
+    "sqlalchemy[asyncio]>=2.0.36,<2.1",
+    "asyncpg>=0.30,<1",
+    "alembic>=1.14,<2",
+    "redis>=6,<8",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<10",
+    "pytest-asyncio>=1,<2",
+    "httpx>=0.28,<0.29",
+    "ruff>=0.12,<1",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.ruff.lint.isort]
+known-third-party = ["alembic"]
+
+[tool.fastapi]
+entrypoint = "app.main:app"

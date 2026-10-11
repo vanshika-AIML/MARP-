@@ -44,6 +44,7 @@ class Theme(Identity, Timestamps, Base):
             "uq_themes_one_default", "is_default", unique=True, postgresql_where=text("is_default")
         ),
         CheckConstraint("NOT is_default OR is_active", name="default_is_active"),
+        Index("ix_themes_active_sort", "is_active", "sort_order"),
     )
     name: Mapped[str] = mapped_column(String(200))
     slug: Mapped[str] = mapped_column(String(100), unique=True)
@@ -59,6 +60,7 @@ class Presentation(Identity, Timestamps, Base):
     __tablename__ = "presentations"
     __table_args__ = (
         CheckConstraint("status IN ('draft', 'ready', 'archived')", name="valid_status"),
+        Index("ix_presentations_status_updated", "status", "updated_at"),
     )
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str | None] = mapped_column(Text)
@@ -93,6 +95,7 @@ class Slide(Identity, Timestamps, Base):
 
 class Template(Identity, Timestamps, Base):
     __tablename__ = "templates"
+    __table_args__ = (Index("ix_templates_active_sort", "is_active", "sort_order"),)
     name: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text, default="", server_default="")
     category: Mapped[str] = mapped_column(String(100), default="general", server_default="general")

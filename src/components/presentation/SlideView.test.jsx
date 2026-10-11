@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import SlideView, { sanitizeSlideHtml } from './SlideView';
+import SlideView, { resolveMediaUrls, sanitizeSlideHtml } from './SlideView';
 
 describe('SlideView sanitization', () => {
   it('removes executable HTML while keeping presentation content', () => {
@@ -17,6 +17,13 @@ describe('SlideView sanitization', () => {
     render(<SlideView slide={{ content: '# Safe' }} />);
     expect(screen.getByText('Safe')).toBeInTheDocument();
   });
+});
+
+it('resolves persisted backend media through the configured API origin', () => {
+  const id = '123e4567-e89b-12d3-a456-426614174000';
+  expect(resolveMediaUrls(`![Visual](/api/v1/media/${id}/file)`)).toContain(
+    `/api/v1/media/${id}/file`,
+  );
 });
 
 it('preserves Markdown-like text inside code fences', () => {

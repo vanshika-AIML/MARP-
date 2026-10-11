@@ -1,7 +1,9 @@
 import React from 'react';
 
 export default function GenerationVisual({ event, compact = false }) {
-  const active = ['generating', 'generating_slide', 'rendering', 'outlining', 'styling'].includes(event?.type);
+  const eventName = event?.event || event?.type;
+  const inactiveEvents = ['idle', 'completed', 'failed', 'cancelled', 'job.completed', 'job.failed', 'job.cancelled'];
+  const active = Boolean(eventName) && !inactiveEvents.includes(eventName);
   const progress = active && typeof event?.progress === 'number' && Number.isFinite(event.progress)
     ? Math.max(0, Math.min(100, event.progress)) : null;
   const phase = progress === null ? 'indeterminate' : `phase-${Math.max(1, Math.min(4, Math.ceil(progress / 25)))}`;
@@ -31,8 +33,8 @@ export default function GenerationVisual({ event, compact = false }) {
       <circle className="assembly-node node-three" cx="163" cy="123" r="3" />
       <circle className="assembly-node node-four" cx="246" cy="47" r="3" />
     </svg>
-    <p className="font-semibold">{active && event?.message ? event.message : 'Assembling your presentation…'}</p>
-    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{active && event?.slideIndex != null ? `Working on slide ${event.slideIndex + 1}` : 'Building the narrative, layout, and visual system.'}</p>
+    <p className="font-semibold">{active && event?.message ? event.message : 'Assembling your presentation...'}</p>
+    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{active && event?.data?.slide != null ? `Working on slide ${event.data.slide}` : 'Building the narrative, layout, and visual system.'}</p>
     {progress !== null ? <div className="real-progress" role="progressbar" aria-label="Generation progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ width: `${progress}%` }} /><small>{progress}%</small></div>
       : <span className="flowing-dots" aria-label="Waiting for generation"><i /><i /><i /></span>}
   </div>;

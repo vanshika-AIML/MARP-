@@ -2,9 +2,10 @@
  * Presentation Centralized State Provider
  * Maintains presentation document model, active slide, generation status, and preview status.
  */
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { parseMarpPresentation, rebuildPresentationMarkdown, splitFrontmatter } from '../utils/marpParser';
-import { STARTER_TEMPLATES, BLANK_DECK_MARKDOWN } from '../utils/mockData';
+import { BLANK_DECK_MARKDOWN } from '../utils/mockData';
 import { presentationService } from '../services/presentationService';
 import { readMarpConfig } from '../config/marpConfig';
 import {
@@ -15,15 +16,12 @@ import {
 
 const PresentationContext = createContext(null);
 
-const initialPresentation = STARTER_TEMPLATES[0];
-const parsedInitial = parseMarpPresentation(initialPresentation.markdown);
-
 const initialState = {
-  id: initialPresentation.id,
-  title: initialPresentation.title,
-  theme: parsedInitial.globalDirectives.theme || initialPresentation.theme || 'default',
-  markdown: initialPresentation.markdown,
-  slides: parsedInitial.slides,
+  id: null,
+  title: 'Untitled Presentation',
+  theme: 'default',
+  markdown: BLANK_DECK_MARKDOWN,
+  slides: parseMarpPresentation(BLANK_DECK_MARKDOWN).slides,
   activeSlide: 0,
   generationStatus: { ...INITIAL_GENERATION_STATUS },
   previewStatus: { ...INITIAL_PREVIEW_STATUS },
@@ -50,7 +48,7 @@ function presentationReducer(state, action) {
         activeSlide: 0,
         isLoading: false,
         error: null,
-        lastSavedAt: presentation.updatedAt || new Date().toISOString(),
+        lastSavedAt: presentation.updatedAt || presentation.updated_at || new Date().toISOString(),
         editRevision: 0,
         savedRevision: 0,
       };
@@ -131,6 +129,10 @@ function presentationReducer(state, action) {
     }
 
     case PRESENTATION_ACTIONS.SET_SAVING: {
+      if (
+        action.payload.id
+        && (action.payload.id !== state.id || action.payload.revision !== state.editRevision)
+      ) return state;
       return {
         ...state,
         isSaving: action.payload.isSaving,
@@ -139,8 +141,8 @@ function presentationReducer(state, action) {
     }
 
     case PRESENTATION_ACTIONS.MARK_SAVED: {
-      if (action.payload.revision !== state.editRevision) {
-        return { ...state, isSaving: false };
+      if (action.payload.id !== state.id || action.payload.revision !== state.editRevision) {
+        return state;
       }
       return {
         ...state,
@@ -167,6 +169,7 @@ export function PresentationProvider({ children, initialData = null }) {
   } : initialState);
 
   const saveTimeoutRef = useRef(null);
+  const saveQueueRef = useRef(Promise.resolve());
 
   // Auto-save only revisions caused by user edits.
   useEffect(() => {
@@ -174,20 +177,23 @@ export function PresentationProvider({ children, initialData = null }) {
     if (!state.id || state.editRevision === state.savedRevision) return undefined;
 
     const revision = state.editRevision;
-    const data = { title: state.title, theme: state.theme, markdown: state.markdown };
+    const presentationId = state.id;
+    const data = { title: state.title, markdown: state.markdown };
 
     saveTimeoutRef.current = setTimeout(async () => {
-      dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: true } });
-      try {
-        await presentationService.updatePresentation(state.id, data);
-        dispatch({
-          type: PRESENTATION_ACTIONS.MARK_SAVED,
-          payload: { revision, lastSavedAt: new Date().toISOString() },
-        });
-      } catch (err) {
-        console.warn('Auto-save warning:', err);
-        dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: false } });
-      }
+      dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: true, id: presentationId, revision } });
+      saveQueueRef.current = saveQueueRef.current.catch(() => undefined).then(async () => {
+        try {
+          await presentationService.updatePresentation(presentationId, data);
+          dispatch({
+            type: PRESENTATION_ACTIONS.MARK_SAVED,
+            payload: { id: presentationId, revision, lastSavedAt: new Date().toISOString() },
+          });
+        } catch (err) {
+          console.warn('Auto-save warning:', err);
+          dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: false, id: presentationId, revision } });
+        }
+      });
     }, 1200);
 
     return () => {
@@ -233,13 +239,16 @@ export function PresentationProvider({ children, initialData = null }) {
     dispatch({ type: PRESENTATION_ACTIONS.SET_LOADING, payload: true });
     try {
       const defaultTheme = readMarpConfig().ai.defaultTheme || 'default';
+      if (template?.backendId) {
+        const created = await presentationService.createFromTemplate(template.backendId);
+        dispatch({ type: PRESENTATION_ACTIONS.SET_PRESENTATION, payload: { presentation: created } });
+        return created;
+      }
       const payload = template ? {
-        title: template.title,
-        theme: template.theme,
-        markdown: template.markdown,
+        title: template.title || template.name,
+        markdown: template.markdown || template.starter_markdown,
       } : {
         title: 'New Presentation',
-        theme: defaultTheme,
         markdown: BLANK_DECK_MARKDOWN.replace(/theme: default/, `theme: ${defaultTheme}`),
       };
       const created = await presentationService.createPresentation(payload);

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import AliasChoices, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from sqlalchemy.engine import make_url
 
@@ -29,8 +29,15 @@ class Settings(BaseSettings):
     )
     redis_url: SecretStr = SecretStr("redis://localhost:6379/0")
     frontend_origins: Annotated[list[str], NoDecode] = Field(
-        default_factory=lambda: ["http://localhost:5173", "http://localhost:5176"]
+        default_factory=lambda: ["http://localhost:5173", "http://localhost:5176"],
+        validation_alias=AliasChoices("CORS_ORIGINS", "FRONTEND_ORIGINS"),
     )
+    trusted_hosts: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["localhost", "127.0.0.1", "testserver", "test"]
+    )
+    max_request_mb: int = Field(default=32, ge=1, le=128)
+    ai_rate_limit_per_minute: int = Field(default=10, ge=1, le=1000)
+    upload_rate_limit_per_minute: int = Field(default=20, ge=1, le=1000)
     dependency_timeout_seconds: float = Field(default=3, gt=0, le=30)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     nvidia_api_key: SecretStr = SecretStr("")
@@ -109,7 +116,7 @@ class Settings(BaseSettings):
             raise ValueError("NVIDIA_BASE_URL must be an HTTP(S) URL without credentials or query")
         return value.rstrip("/")
 
-    @field_validator("frontend_origins", mode="before")
+    @field_validator("frontend_origins", "trusted_hosts", mode="before")
     @classmethod
     def parse_origins(cls, value: object) -> object:
         if isinstance(value, str):
@@ -142,3 +149,32 @@ class Settings(BaseSettings):
                 raise ValueError("CORS origins must be explicit HTTP(S) origins without paths")
             normalized.append(origin.rstrip("/"))
         return list(dict.fromkeys(normalized))
+
+    @field_validator("trusted_hosts")
+    @classmethod
+    def validate_hosts(cls, hosts: list[str]) -> list[str]:
+        if not hosts or any(not host or "/" in host or "://" in host for host in hosts):
+            raise ValueError("TRUSTED_HOSTS must contain host names without schemes or paths")
+        return list(dict.fromkeys(hosts))
+
+    @model_validator(mode="after")
+    def production_requirements(self):
+        if self.app_env != "production":
+            return self
+        database = self.database_url.get_secret_value()
+        redis = self.redis_url.get_secret_value()
+        if self.debug:
+            raise ValueError("DEBUG must be false in production")
+        if "change-me-local-only" in database or "localhost" in database:
+            raise ValueError("Production DATABASE_URL must use explicit production credentials")
+        if "localhost" in redis or "127.0.0.1" in redis:
+            raise ValueError("Production REDIS_URL must not use a loopback host")
+        if not self.frontend_origins or any(
+            "localhost" in origin for origin in self.frontend_origins
+        ):
+            raise ValueError("Production FRONTEND_ORIGINS must be explicit deployed origins")
+        if "*" in self.trusted_hosts or any(
+            host in {"localhost", "127.0.0.1", "test"} for host in self.trusted_hosts
+        ):
+            raise ValueError("Production TRUSTED_HOSTS must be explicit deployed hosts")
+        return self

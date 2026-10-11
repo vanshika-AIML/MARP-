@@ -3,7 +3,7 @@
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Integer, String, Text
+from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -18,6 +18,7 @@ class UploadedSource(Identity, Timestamps, Base):
             "status IN ('uploaded','processing','ready','failed')", name="valid_status"
         ),
         CheckConstraint("size_bytes > 0", name="positive_size"),
+        Index("ix_uploaded_sources_status_updated", "status", "updated_at"),
     )
     original_filename: Mapped[str] = mapped_column(String(255))
     stored_filename: Mapped[str] = mapped_column(String(100), unique=True)

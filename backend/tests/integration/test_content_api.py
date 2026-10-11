@@ -347,7 +347,7 @@ async def test_database_constraints_and_migration(sessions):
     async with sessions() as session:
         assert (
             await session.scalar(text("SELECT version_num FROM alembic_version"))
-            == "0005_media"
+            == "0006_hardening"
         )
         session.add_all(
             [Theme(name="A", slug="a", is_default=True), Theme(name="B", slug="b", is_default=True)]

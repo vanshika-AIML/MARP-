@@ -6,9 +6,11 @@
  * - Global Directives: header, footer, paginate (slide number)
  * - Scalable aspect-ratio container (16:9)
  */
+/* eslint-disable react-refresh/only-export-components */
 import React, { useMemo } from 'react';
 import DOMPurify from 'dompurify';
 import { getTheme } from '../../utils/themeRegistry';
+import { api } from '../../services/api';
 
 /**
  * Basic safe markdown-to-html compiler tailored for MARP slides
@@ -133,6 +135,13 @@ export function sanitizeSlideHtml(html = '') {
   });
 }
 
+export function resolveMediaUrls(markdown = '') {
+  return markdown.replace(
+    /(\]\()(\/api\/v1\/media\/[a-f0-9-]+\/file)(\))/gi,
+    (_match, open, path, close) => `${open}${api.mediaUrl(path) || path}${close}`,
+  );
+}
+
 function getSlideLayout(content = '') {
   const trimmed = content.trim();
   const lineCount = trimmed.split(/\r?\n/).filter(Boolean).length;
@@ -196,7 +205,7 @@ export function SlideView({
   const dense = (slide?.content || '').length > 1100 || (slide?.content || '').split('\n').filter(Boolean).length > 16;
 
   const renderedHtml = useMemo(() => {
-    return sanitizeSlideHtml(renderSlideMarkdownToHtml(slide?.content || ''));
+    return sanitizeSlideHtml(renderSlideMarkdownToHtml(resolveMediaUrls(slide?.content || '')));
   }, [slide?.content]);
 
   const slideWrapperClasses = [

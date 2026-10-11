@@ -1,15 +1,8 @@
-import { STARTER_TEMPLATES } from '../utils/mockData';
-import { THEME_REGISTRY } from '../utils/themeRegistry';
-
 export const MARP_CONFIG_KEY = 'marp-admin-config-v1';
 export const MARP_DRAFT_KEY = 'marp-admin-draft-v1';
 
 const defaultConfig = {
-  site: {
-    productName: 'MARP Studio',
-    supportUrl: '/dashboard',
-    footer: 'Ideas, structured.',
-  },
+  site: { productName: 'MARP Studio', supportUrl: '/dashboard', footer: 'Ideas, structured.' },
   landing: {
     visible: true,
     eyebrow: 'Presentation intelligence for clear thinking',
@@ -35,58 +28,25 @@ const defaultConfig = {
     descriptions: { home: 'Your next great story starts here.', templates: 'A different personality for every presentation.', ai: 'Start with an idea. Leave with a first draft.', upload: 'Your own Markdown. Your own point of view.' },
     visibleSections: { home: true, templates: true, ai: true, upload: true },
   },
-  featureFlags: {
-    createWithAI: true, uploadTemplate: true, exploreTemplates: true, learnWithVideo: true,
-    aiAgent: true, customThemes: true, exports: true, animations: true,
-  },
+  featureFlags: { createWithAI: true, uploadTemplate: true, exploreTemplates: true, learnWithVideo: true, aiAgent: true, customThemes: true, exports: true, animations: true },
   animation: { preset: 'Balanced', enabled: true, reducedMotionDefault: false, ambientIntensity: 'balanced' },
   ai: { defaultTheme: 'default', defaultInstructions: 'Create a clear, audience-aware MARP presentation with strong hierarchy.', modes: ['Single Slide', 'Full Slide Deck'], tones: ['Clear', 'Executive', 'Technical'] },
-  templates: STARTER_TEMPLATES.map((template, index) => ({
-    id: template.id, name: template.title, description: template.description, category: 'Starter', theme: template.theme,
-    markdown: template.markdown, active: true, featured: index === 0, order: index,
-  })),
-  themes: THEME_REGISTRY.map((theme, index) => ({ ...theme, active: true, isDefault: index === 0, order: index })),
+  visuals: { search_enabled: false, generation_enabled: false, preferred_strategy: 'auto', max_visuals_per_deck: 6, default_image_style: 'editorial', search_provider: 'none', generation_provider: 'none' },
+  templates: [],
+  themes: [],
 };
 
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
+const clone = (value) => JSON.parse(JSON.stringify(value));
+let runtimeConfig = clone(defaultConfig);
 
-export function getDefaultMarpConfig() {
-  return clone(defaultConfig);
-}
+export function getDefaultMarpConfig() { return clone(defaultConfig); }
+export function readMarpConfig() { return clone(runtimeConfig); }
+export function readMarpDraft() { return readMarpConfig(); }
+export function setRuntimeMarpConfig(config) { runtimeConfig = mergeConfig(defaultConfig, config); }
+export function saveMarpDraft(config) { return config; }
+export function publishMarpConfig(config) { setRuntimeMarpConfig(config); return readMarpConfig(); }
 
-export function readMarpConfig() {
-  try {
-    const stored = JSON.parse(window.localStorage.getItem(MARP_CONFIG_KEY) || 'null');
-    return stored ? mergeConfig(defaultConfig, stored) : getDefaultMarpConfig();
-  } catch {
-    return getDefaultMarpConfig();
-  }
-}
-
-export function readMarpDraft() {
-  try {
-    const stored = JSON.parse(window.localStorage.getItem(MARP_DRAFT_KEY) || 'null');
-    return stored ? mergeConfig(readMarpConfig(), stored) : readMarpConfig();
-  } catch {
-    return readMarpConfig();
-  }
-}
-
-export function saveMarpDraft(config) {
-  window.localStorage.setItem(MARP_DRAFT_KEY, JSON.stringify(config));
-}
-
-export function publishMarpConfig(config, changedBy = 'Portal Admin') {
-  const published = { ...config, meta: { publishedAt: new Date().toISOString(), changedBy } };
-  window.localStorage.setItem(MARP_CONFIG_KEY, JSON.stringify(published));
-  window.localStorage.removeItem(MARP_DRAFT_KEY);
-  window.dispatchEvent(new CustomEvent('marp-config-published', { detail: published }));
-  return published;
-}
-
-function mergeConfig(base, incoming) {
+export function mergeConfig(base, incoming = {}) {
   return {
     ...clone(base), ...incoming,
     site: { ...base.site, ...incoming.site },
@@ -95,5 +55,8 @@ function mergeConfig(base, incoming) {
     featureFlags: { ...base.featureFlags, ...incoming.featureFlags },
     animation: { ...base.animation, ...incoming.animation },
     ai: { ...base.ai, ...incoming.ai },
+    visuals: { ...base.visuals, ...incoming.visuals },
+    templates: incoming.templates || base.templates,
+    themes: incoming.themes || base.themes,
   };
 }

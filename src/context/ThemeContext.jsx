@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 const STORAGE_KEY = 'marp-theme-mode';
 const ThemeContext = createContext(null);

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -12,6 +12,7 @@ from app.models.content import Identity
 
 class MediaAsset(Identity, Base):
     __tablename__ = "media_assets"
+    __table_args__ = (Index("ix_media_assets_provider_created", "provider", "created_at"),)
     type: Mapped[str] = mapped_column(String(20))
     provider: Mapped[str] = mapped_column(String(100))
     source_url: Mapped[str | None] = mapped_column(Text)
@@ -31,4 +32,4 @@ class MediaCache(Base):
     __tablename__ = "media_cache"
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     asset_id: Mapped[UUID | None] = mapped_column(ForeignKey("media_assets.id", ondelete="CASCADE"))
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

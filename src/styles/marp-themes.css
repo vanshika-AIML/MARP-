@@ -42,6 +42,17 @@
 .slide-layout-code .marp-slide-content, .slide-layout-data .marp-slide-content { --slide-padding-y: 6%; }.slide-layout-code h2, .slide-layout-data h2 { font-size: 1.7em; margin-bottom: .5em; }
 .slide-layout-stats strong { font-size: 1.9em; line-height: 1.1; font-variant-numeric: tabular-nums; }.slide-layout-stats p { font-size: 1.2em; }.slide-layout-stats::before { width: 40%; border-left: 1px solid color-mix(in srgb, var(--theme-accent) 15%, transparent); }
 .slide-layout-image .marp-slide-content { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: min-content; align-content: center; align-items: center; column-gap: 7%; }.slide-layout-image .marp-slide-content > * { grid-column: 1; }.slide-layout-image .marp-slide-content > img { grid-column: 2; grid-row: 1 / span 8; width: 100%; height: 34cqw; max-height: 34cqw; object-fit: cover; margin: 0; }.slide-layout-image h1 { font-size: 2.15em; }.slide-layout-image h2 { font-size: 1.65em; }.slide-layout-image.slide-variant-1 .marp-slide-content > img { border-radius: 50% 50% 0 0; }.slide-layout-image.slide-variant-2 .marp-slide-content > img { outline: .3em solid var(--theme-accent); outline-offset: -.3em; }
+
+.visual-split .marp-slide-content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .85fr); gap: 7%; align-items: center; }
+.visual-split .marp-slide-content > * { grid-column: 1; }
+.visual-split .marp-slide-content > img { grid-column: 2; grid-row: 1 / span 12; width: 100%; height: 34cqw; object-fit: cover; margin: 0; }
+.visual-hero .marp-slide-content > img { width: 100%; height: 25cqw; object-fit: cover; margin: 3cqw 0 0; }
+.visual-framed .marp-slide-content > img { display: block; width: min(100%, 75cqw); max-height: 36cqw; object-fit: cover; margin: 3cqw auto 0; padding: .6cqw; border: 1px solid color-mix(in srgb, var(--theme-text) 24%, transparent); box-shadow: 0 1.8cqw 4cqw color-mix(in srgb, var(--theme-text) 14%, transparent); }
+.visual-full-bleed .marp-slide-content > img, .visual-background .marp-slide-content > img { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; margin: 0; }
+.visual-full-bleed .marp-slide-content > :not(img), .visual-background .marp-slide-content > :not(img) { position: relative; z-index: 1; }
+.visual-full-bleed .marp-slide-content::after, .visual-background .marp-slide-content::after { content: ''; position: absolute; inset: 0; z-index: 0; background: linear-gradient(90deg, rgb(0 0 0 / .68), rgb(0 0 0 / .08)); pointer-events: none; }
+.visual-full-bleed .marp-slide-content { color: white; text-shadow: 0 .2cqw .8cqw rgb(0 0 0 / .55); }
+.visual-background .marp-slide-content > img { opacity: .25; }
 .slide-layout-columns .marp-slide-content { justify-content: center; }.slide-dense .marp-slide-content { font-size: 1.65cqw; }.slide-dense h1, .slide-dense h2 { font-size: 1.8em; }.slide-dense ul, .slide-dense ol { gap: .25em; }
 /* 24 themes: distinctive graphic systems, not a single rounded card template. */
 .marp-theme-default { --slide-title-size: 3.25em; }.marp-theme-default::before { width: .6%; background: var(--theme-primary); }.marp-theme-default h2 { border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent); padding-bottom: .35em; }

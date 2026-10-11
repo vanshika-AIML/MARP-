@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,6 +20,7 @@ class GenerationJob(Identity, Timestamps, Base):
             name="valid_status",
         ),
         CheckConstraint("progress BETWEEN 0 AND 100", name="valid_progress"),
+        Index("ix_generation_jobs_status_updated", "status", "updated_at"),
     )
     action: Mapped[str] = mapped_column(String(100))
     presentation_id: Mapped[UUID | None] = mapped_column(

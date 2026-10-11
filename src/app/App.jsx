@@ -52,6 +52,10 @@ function AppContent() {
   const handleOpenDeck = (deckId) => navigate(`/editor/${encodeURIComponent(deckId)}`);
 
   const handleNewDeckWithTemplate = async (template) => {
+    if (template?.presentationId) {
+      navigate(`/editor/${encodeURIComponent(template.presentationId)}`);
+      return template;
+    }
     const created = await createNewPresentation(template);
     if (!created?.id) throw new Error('Could not create your presentation. Please try again.');
     navigate(`/editor/${encodeURIComponent(created.id)}`);

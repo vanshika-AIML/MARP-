@@ -55,3 +55,19 @@ def test_invalid_configuration_fails_early(values):
     with pytest.raises(ValidationError) as error:
         Settings(_env_file=None, **values)
     assert "user:secret" not in str(error.value)
+
+
+def test_production_rejects_development_dependencies_and_debugging():
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, app_env="production")
+
+    settings = Settings(
+        _env_file=None,
+        app_env="production",
+        debug=False,
+        database_url="postgresql+asyncpg://marp:secret@postgres:5432/marp",
+        redis_url="redis://redis:6379/0",
+        frontend_origins=["https://studio.example"],
+        trusted_hosts=["studio.example"],
+    )
+    assert settings.app_env == "production"

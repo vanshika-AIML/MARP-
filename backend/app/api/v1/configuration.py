@@ -24,6 +24,14 @@ async def visual_defaults(session: Annotated[AsyncSession, Depends(get_db_sessio
     return await load_visual_settings(session)
 
 
+@router.put('/admin/visuals', response_model=VisualSettings)
+async def update_visual_defaults(payload: VisualSettings, service: Service):
+    values = payload.model_dump()
+    for key, value in values.items():
+        await service.put_config('visuals', key, {'value': value})
+    return payload
+
+
 @router.get("/admin/config", response_model=list[AppConfigRead])
 async def list_config(service: Service, page: Pagination):
     return await service.list(AppConfig, **page)

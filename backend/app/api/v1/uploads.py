@@ -8,6 +8,7 @@ from starlette.requests import HTTPConnection
 from app.api.v1.jobs import get_job_queue
 from app.core.database import get_db_session
 from app.core.job_queue import JobQueue
+from app.core.rate_limit import upload_rate_limit
 from app.schemas.sources import SourceRead, UploadAccepted
 from app.services.sources import create_source, delete_source, require_source
 from app.services.storage import StorageProvider, get_storage
@@ -26,6 +27,7 @@ async def upload_source(
     session: Annotated[AsyncSession, Depends(get_db_session)],
     queue: Annotated[JobQueue, Depends(get_job_queue)],
     storage: Annotated[StorageProvider, Depends(get_source_storage)],
+    _rate_limit: Annotated[None, Depends(upload_rate_limit)],
 ):
     source_id = await create_source(session, queue, storage, file, request.app.state.settings)
     source = await require_source(session, source_id)
@@ -43,6 +45,7 @@ async def remove_source(
     session: Annotated[AsyncSession, Depends(get_db_session)],
     queue: Annotated[JobQueue, Depends(get_job_queue)],
     storage: Annotated[StorageProvider, Depends(get_source_storage)],
+    _rate_limit: Annotated[None, Depends(upload_rate_limit)],
 ):
     await delete_source(session, storage, queue.redis, source_id)
     return Response(status_code=204)

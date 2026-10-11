@@ -3,53 +3,34 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import useWebSocket from './useWebSocket';
 
 class FakeWebSocket {
-  static OPEN = 1;
-  static CONNECTING = 0;
   static instances = [];
-
-  constructor() {
-    this.readyState = FakeWebSocket.CONNECTING;
-    FakeWebSocket.instances.push(this);
-  }
-
-  close() {
-    this.readyState = 3;
-    this.onclose?.();
-  }
+  constructor(url) { this.url = url; FakeWebSocket.instances.push(this); }
+  close() { this.onclose?.(); }
 }
 
 describe('useWebSocket lifecycle', () => {
-  afterEach(() => {
-    FakeWebSocket.instances = [];
-    vi.useRealTimers();
-  });
+  afterEach(() => { FakeWebSocket.instances = []; vi.useRealTimers(); vi.unstubAllGlobals(); });
 
-  it('reconnects after an unexpected close', () => {
-    vi.useFakeTimers();
+  it('connects to one resource and deduplicates repeated events', () => {
     vi.stubGlobal('WebSocket', FakeWebSocket);
-    const { result } = renderHook(() => useWebSocket(null, { autoConnect: false, reconnectAttempts: 1, reconnectInterval: 100 }));
-
-    act(() => result.current.connect());
+    const onEvent = vi.fn();
+    renderHook(() => useWebSocket('/ws/jobs/one', { onEvent }));
     const socket = FakeWebSocket.instances[0];
-    act(() => socket.onclose?.());
-    act(() => vi.advanceTimersByTime(100));
-
-    expect(FakeWebSocket.instances).toHaveLength(2);
+    act(() => socket.onopen?.());
+    const event = JSON.stringify({ event: 'slide.started', updated_at: '2026-01-01', progress: 40 });
+    act(() => { socket.onmessage?.({ data: event }); socket.onmessage?.({ data: event }); });
+    expect(onEvent).toHaveBeenCalledTimes(1);
   });
 
-  it('does not reconnect after manual disconnect or unmount', () => {
+  it('uses bounded reconnect and cleans up on unmount', () => {
     vi.useFakeTimers();
     vi.stubGlobal('WebSocket', FakeWebSocket);
-    const { result, unmount } = renderHook(() => useWebSocket(null, { autoConnect: false, reconnectAttempts: 1, reconnectInterval: 100 }));
-
-    act(() => result.current.connect());
-    act(() => result.current.disconnect());
-    act(() => vi.advanceTimersByTime(100));
-    expect(FakeWebSocket.instances).toHaveLength(1);
-
-    act(() => result.current.connect());
+    const { unmount } = renderHook(() => useWebSocket('/ws/jobs/one'));
+    act(() => FakeWebSocket.instances[0].onclose?.());
+    act(() => vi.advanceTimersByTime(1000));
+    expect(FakeWebSocket.instances).toHaveLength(2);
     unmount();
-    act(() => vi.advanceTimersByTime(100));
+    act(() => vi.advanceTimersByTime(20000));
     expect(FakeWebSocket.instances).toHaveLength(2);
   });
 });

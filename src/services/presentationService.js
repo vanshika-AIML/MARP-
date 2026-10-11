@@ -1,120 +1,39 @@
-/**
- * Presentation Service
- * Encapsulates all REST operations for presentation documents:
- * CRUD, preview rendering, and multi-format exports.
- */
 import api from './api';
-import { mockService } from './mockService';
-import { shouldUseMockFallback } from './fallback';
+import { parseMarpPresentation } from '../utils/marpParser';
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK_FALLBACK === 'true';
+export const normalizePresentation = (item) => ({
+  ...item,
+  createdAt: item.created_at,
+  updatedAt: item.updated_at,
+  theme: parseMarpPresentation(item.markdown || '').globalDirectives.theme || 'default',
+});
+
+function payload(data) {
+  return Object.fromEntries(Object.entries(data).filter(([key]) => ['title', 'description', 'markdown', 'theme_id', 'status'].includes(key)));
+}
 
 export const presentationService = {
-  /**
-   * Fetch list of presentations
-   */
-  async listPresentations() {
-    try {
-      return await api.get('/presentations');
-    } catch (err) {
-      if (USE_MOCK && shouldUseMockFallback(err)) {
-        console.info('[presentationService] Backend unavailable; using mock service for listPresentations');
-        return await mockService.listPresentations();
-      }
-      throw err;
+  async listPresentations(options = {}) {
+    const items = await api.list('/presentations', options);
+    const result = [];
+    for (let index = 0; index < items.length; index += 6) {
+      result.push(...await Promise.all(items.slice(index, index + 6).map((item) => this.getPresentation(item.id, options))));
     }
+    return result;
   },
-
-  /**
-   * Get single presentation by ID
-   */
-  async getPresentation(id) {
+  async getPresentation(id, options = {}) {
     if (!id) throw new Error('Presentation ID is required');
-    try {
-      return await api.get(`/presentations/${id}`);
-    } catch (err) {
-      if (USE_MOCK && shouldUseMockFallback(err)) {
-        console.info(`[presentationService] Backend unavailable; using mock service for getPresentation(${id})`);
-        return await mockService.getPresentation(id);
-      }
-      throw err;
-    }
+    return normalizePresentation(await api.get(`/presentations/${encodeURIComponent(id)}`, options));
   },
-
-  /**
-   * Create a new presentation
-   */
-  async createPresentation(payload) {
-    try {
-      return await api.post('/presentations', payload);
-    } catch (err) {
-      if (USE_MOCK && shouldUseMockFallback(err)) {
-        console.info('[presentationService] Backend unavailable; using mock service for createPresentation');
-        return await mockService.createPresentation(payload);
-      }
-      throw err;
-    }
-  },
-
-  /**
-   * Update existing presentation
-   */
-  async updatePresentation(id, data) {
-    if (!id) throw new Error('Presentation ID is required');
-    try {
-      return await api.put(`/presentations/${id}`, data);
-    } catch (err) {
-      if (USE_MOCK && shouldUseMockFallback(err)) {
-        console.info(`[presentationService] Backend unavailable; using mock service for updatePresentation(${id})`);
-        return await mockService.updatePresentation(id, data);
-      }
-      throw err;
-    }
-  },
-
-  /**
-   * Delete a presentation
-   */
-  async deletePresentation(id) {
-    if (!id) throw new Error('Presentation ID is required');
-    try {
-      return await api.delete(`/presentations/${id}`);
-    } catch (err) {
-      if (USE_MOCK && shouldUseMockFallback(err)) {
-        console.info(`[presentationService] Backend unavailable; using mock service for deletePresentation(${id})`);
-        return await mockService.deletePresentation(id);
-      }
-      throw err;
-    }
-  },
-
-  /**
-   * Request backend to render MARP preview (HTML / SVG)
-   */
-  async renderPreview(markdown, options = {}) {
-    try {
-      return await api.post('/render/preview', { markdown, ...options });
-    } catch (err) {
-      if (USE_MOCK && shouldUseMockFallback(err)) {
-        return await mockService.renderPreview(markdown, options);
-      }
-      throw err;
-    }
-  },
-
-  /**
-   * Export presentation to pdf, html, pptx, or png
-   */
-  async exportPresentation(id, format = 'html', options = {}) {
-    try {
-      return await api.post(`/presentations/${id}/export`, { format, ...options });
-    } catch (err) {
-      if (USE_MOCK) {
-        return await mockService.exportPresentation(id, format);
-      }
-      throw err;
-    }
-  },
+  async createPresentation(data) { return normalizePresentation(await api.post('/presentations', payload(data))); },
+  async createFromTemplate(id) { return normalizePresentation(await api.post(`/templates/${encodeURIComponent(id)}/create-presentation`, {})); },
+  async updatePresentation(id, data) { return normalizePresentation(await api.patch(`/presentations/${encodeURIComponent(id)}`, payload(data))); },
+  deletePresentation(id) { return api.delete(`/presentations/${encodeURIComponent(id)}`); },
+  getSlides(id, options = {}) { return api.list(`/presentations/${encodeURIComponent(id)}/slides`, options); },
+  addSlide(id, data) { return api.post(`/presentations/${encodeURIComponent(id)}/slides`, data); },
+  updateSlide(id, data) { return api.patch(`/slides/${encodeURIComponent(id)}`, data); },
+  deleteSlide(id) { return api.delete(`/slides/${encodeURIComponent(id)}`); },
+  reorderSlides(id, slideIds) { return api.post(`/presentations/${encodeURIComponent(id)}/slides/reorder`, { slide_ids: slideIds }); },
+  async exportPresentation() { throw new Error('PowerPoint export is not available in this backend. Choose Markdown, HTML, or Print / PDF.'); },
 };
-
 export default presentationService;

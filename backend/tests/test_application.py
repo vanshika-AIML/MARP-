@@ -118,3 +118,27 @@ async def test_dependency_failures_do_not_log_credentials(app_factory, caplog):
     assert "Redis health check failed (ConnectionError)" in caplog.text
     assert "do-not-leak" not in caplog.text
     assert "internal-host" not in caplog.text
+
+
+async def test_security_headers_request_ids_host_and_body_limit(app_factory, settings):
+    factory, _, _ = app_factory
+    app = factory(settings.model_copy(update={"max_request_mb": 1, "max_upload_mb": 1}))
+    async with app.router.lifespan_context(app):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.get("/health", headers={"X-Request-ID": "trace-123"})
+            assert response.headers["x-request-id"] == "trace-123"
+            assert response.headers["x-content-type-options"] == "nosniff"
+            assert response.headers["referrer-policy"] == "no-referrer"
+
+            response = await client.post(
+                "/health",
+                content=b"x",
+                headers={"Content-Length": str(3 * 1024 * 1024)},
+            )
+            assert response.status_code == 413
+            assert response.json()["error"]["code"] == "request_too_large"
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://untrusted.example"
+        ) as client:
+            assert (await client.get("/health")).status_code == 400

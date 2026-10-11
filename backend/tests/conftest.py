@@ -3,11 +3,45 @@ import pytest
 from app.core.config import Settings
 
 
+class FakeRatePipeline:
+    def __init__(self, store):
+        self.store = store
+        self.key = None
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *_args):
+        return None
+
+    def incr(self, key):
+        self.key = key
+
+    def ttl(self, _key):
+        return None
+
+    async def execute(self):
+        self.store[self.key] = self.store.get(self.key, 0) + 1
+        return [self.store[self.key], 60]
+
+
+class FakeRateRedis:
+    def __init__(self):
+        self.store = {}
+
+    def pipeline(self, transaction=True):
+        assert transaction
+        return FakeRatePipeline(self.store)
+
+    async def expire(self, _key, _seconds):
+        return True
+
 class StubDependency:
     def __init__(self) -> None:
         self.available = True
         self.ping_count = 0
         self.closed = False
+        self.client = FakeRateRedis()
 
     async def ping(self) -> bool:
         self.ping_count += 1

@@ -42,7 +42,6 @@ export { Spinner, ProgressBar } from './components/ui/Spinner';
 export { api } from './services/api';
 export { presentationService } from './services/presentationService';
 export { agentService } from './services/agentService';
-export { mockService } from './services/mockService';
 
 // Hooks
 export { usePresentation } from './hooks/usePresentation';

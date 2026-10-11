@@ -14,7 +14,7 @@ const sampleMarkdown = '---\nmarp: true\ntheme: default\n---\n\n# A considered i
 
 export default function MarpAdminPage() {
   const navigate = useNavigate();
-  const { draft, isDirty, updateDraft, resetDraft, publish } = useMarpConfig();
+  const { draft, isDirty, loading, error: configError, updateDraft, resetDraft, saveDraft: persistDraft, publish } = useMarpConfig();
   const { theme, toggleTheme } = useTheme();
   const user = getPortalAdminUser();
   const [section, setSection] = useState('overview');
@@ -23,18 +23,32 @@ export default function MarpAdminPage() {
   const [selectedTheme, setSelectedTheme] = useState(draft.themes[0]?.id || 'default');
   const canWrite = canAdmin(user, 'settings:write');
 
-  const update = (path, value) => updateDraft((current) => {
-    const next = JSON.parse(JSON.stringify(current));
-    const keys = path.split('.');
-    let target = next;
-    keys.slice(0, -1).forEach((key) => { target = target[key]; });
-    target[keys[keys.length - 1]] = value;
-    return next;
-  });
-  const saveDraft = () => { setToast('Draft saved locally'); window.setTimeout(() => setToast(''), 2200); };
-  const publishChanges = () => { publish(user.name); setToast('Configuration published'); window.setTimeout(() => setToast(''), 2200); };
+  const update = (path, value) => {
+    if (typeof path === 'function') { updateDraft(path); return; }
+    updateDraft((current) => {
+      const next = JSON.parse(JSON.stringify(current));
+      const keys = path.split('.');
+      let target = next;
+      keys.slice(0, -1).forEach((key) => { target = target[key]; });
+      target[keys[keys.length - 1]] = value;
+      return next;
+    });
+  };
+  const saveDraft = async () => {
+    try { await persistDraft(); setToast('Draft saved'); }
+    catch (reason) { setToast(reason.message || 'Draft could not be saved'); }
+    window.setTimeout(() => setToast(''), 2200);
+  };
+  const publishChanges = async () => {
+    try { await publish(user.name); setToast('Configuration published'); }
+    catch (reason) { setToast(reason.message || 'Configuration could not be published'); }
+    window.setTimeout(() => setToast(''), 2200);
+  };
   const activeTheme = useMemo(() => draft.themes.find((item) => item.id === selectedTheme) || draft.themes[0], [draft.themes, selectedTheme]);
   const templateCount = draft.templates.filter((item) => item.active).length;
+
+  if (loading) return <div className={'admin-denied'}><h1>Loading administration…</h1></div>;
+  if (configError) return <div className={'admin-denied'}><h1>Admin configuration unavailable</h1><p>{configError}</p></div>;
 
   if (!canAdmin(user, 'admin:read')) return <div className="admin-denied"><Shield size={32} /><h1>Admin access required</h1><p>Your IEEE Portal role does not have MARP administration access.</p><button onClick={() => navigate('/dashboard')}>Return to workspace</button></div>;
 

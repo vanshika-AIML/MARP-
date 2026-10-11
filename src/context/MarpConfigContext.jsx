@@ -1,48 +1,49 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getDefaultMarpConfig, publishMarpConfig, readMarpConfig, readMarpDraft, saveMarpDraft } from '../config/marpConfig';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { getDefaultMarpConfig, mergeConfig, setRuntimeMarpConfig } from '../config/marpConfig';
+import { configService } from '../services/configService';
 
 const MarpConfigContext = createContext(null);
+const clone = (value) => JSON.parse(JSON.stringify(value));
 
 export function MarpConfigProvider({ children }) {
-  const [config, setConfig] = useState(readMarpConfig);
-  const [draft, setDraftState] = useState(readMarpDraft);
-  const [isDirty, setDirty] = useState(() => JSON.stringify(readMarpDraft()) !== JSON.stringify(readMarpConfig()));
+  const defaults = getDefaultMarpConfig();
+  const [config, setConfig] = useState(defaults);
+  const [draft, setDraftState] = useState(defaults);
+  const [isDirty, setDirty] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const sync = (event) => {
-      const next = event.detail || readMarpConfig();
-      setConfig(next);
-      setDraftState(next);
-      setDirty(false);
-    };
-    window.addEventListener('marp-config-published', sync);
-    return () => window.removeEventListener('marp-config-published', sync);
+  const reload = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      const remote = await configService.load();
+      const base = mergeConfig(getDefaultMarpConfig(), remote.published);
+      const published = { ...base, templates: remote.templates, themes: remote.themes, featureFlags: { ...base.featureFlags, ...remote.featureFlags }, visuals: remote.visuals };
+      const nextDraft = remote.draft ? mergeConfig(published, remote.draft) : published;
+      setRuntimeMarpConfig(published);
+      setConfig(published); setDraftState(nextDraft);
+      setDirty(JSON.stringify(published) !== JSON.stringify(nextDraft));
+    } catch (reason) { setError(reason.message || 'Could not load application configuration.'); }
+    finally { setLoading(false); }
   }, []);
 
-  const updateDraft = (updater) => {
-    setDraftState((current) => {
-      const next = typeof updater === 'function' ? updater(current) : updater;
-      saveMarpDraft(next);
-      setDirty(true);
-      return next;
-    });
-  };
-  const resetDraft = () => { const next = clone(config); setDraftState(next); saveMarpDraft(next); setDirty(false); };
-  const publish = (changedBy) => { const next = publishMarpConfig(draft, changedBy); setConfig(next); setDraftState(next); setDirty(false); return next; };
-  const resetAll = () => { const next = getDefaultMarpConfig(); publishMarpConfig(next, 'System'); setConfig(next); setDraftState(next); setDirty(false); };
+  useEffect(() => { reload(); }, [reload]);
+  const updateDraft = (updater) => { setDraftState((current) => typeof updater === 'function' ? updater(current) : updater); setDirty(true); };
+  const resetDraft = () => { setDraftState(clone(config)); setDirty(false); };
+  const saveDraft = async () => { await configService.saveDraft(draft); };
+  const publish = async () => { await configService.publish(draft, config); await reload(); return draft; };
+  const resetAll = () => { setDraftState(getDefaultMarpConfig()); setDirty(true); };
 
-  return <MarpConfigContext.Provider value={{ config, draft, isDirty, updateDraft, resetDraft, publish, resetAll }}>{children}</MarpConfigContext.Provider>;
+  return <MarpConfigContext.Provider value={{ config, draft, isDirty, loading, error, reload, updateDraft, resetDraft, saveDraft, publish, resetAll }}>{children}</MarpConfigContext.Provider>;
 }
-
-function clone(value) { return JSON.parse(JSON.stringify(value)); }
 
 export function useMarpConfig() {
   const context = useContext(MarpConfigContext);
   if (!context) {
     const fallback = getDefaultMarpConfig();
-    return { config: fallback, draft: fallback, isDirty: false, updateDraft: () => {}, resetDraft: () => {}, publish: () => fallback, resetAll: () => {} };
+    return { config: fallback, draft: fallback, isDirty: false, loading: false, error: '', updateDraft: () => {}, resetDraft: () => {}, saveDraft: async () => {}, publish: async () => fallback, resetAll: () => {} };
   }
   return context;
 }
-
 export default MarpConfigContext;

@@ -1,0 +1,86 @@
+name: marp-studio
+
+x-backend-env: &backend-env
+  APP_ENV: production
+  DEBUG: "false"
+  DATABASE_URL: postgresql+asyncpg://marp:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/marp
+  REDIS_URL: redis://redis:6379/0
+  CORS_ORIGINS: ${CORS_ORIGINS:?set CORS_ORIGINS}
+  TRUSTED_HOSTS: ${TRUSTED_HOSTS:?set TRUSTED_HOSTS}
+  NVIDIA_API_KEY: ${NVIDIA_API_KEY:-}
+  PIXABAY_API_KEY: ${PIXABAY_API_KEY:-}
+  STABILITY_API_KEY: ${STABILITY_API_KEY:-}
+  UPLOAD_DIR: /data/uploads
+  MEDIA_DIR: /data/media
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: marp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: marp
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U marp -d marp]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  redis:
+    image: redis:7.4-alpine
+    command: [redis-server, --appendonly, "yes"]
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  migrate:
+    build: { context: ./backend }
+    environment: *backend-env
+    command: [alembic, upgrade, head]
+    depends_on:
+      postgres: { condition: service_healthy }
+    volumes: [uploads:/data/uploads, media:/data/media]
+    restart: "no"
+  backend:
+    build: { context: ./backend }
+    environment: *backend-env
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    volumes: [uploads:/data/uploads, media:/data/media]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; request=urllib.request.Request('http://127.0.0.1:8000/api/v1/health/ready', headers={'Host':'backend'}); urllib.request.urlopen(request, timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  worker:
+    build: { context: ./backend }
+    environment: *backend-env
+    command: [arq, app.workers.settings.WorkerSettings]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    volumes: [uploads:/data/uploads, media:/data/media]
+    healthcheck:
+      test: [CMD, python, -c, "import os; os.kill(1, 0)"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+  frontend:
+    build: { context: . }
+    depends_on:
+      backend: { condition: service_healthy }
+    ports: ["8080:8080"]
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+  uploads:
+  media:

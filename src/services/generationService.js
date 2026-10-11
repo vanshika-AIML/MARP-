@@ -1,34 +1,43 @@
-import agentService from './agentService';
-import { getGeneratedMarkdown, isGenerationResponse } from './fallback';
+import agentService, { actionName } from './agentService';
+import { subscribeResource } from './realtimeService';
 
-const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+export function watchJob(id, { signal, onEvent, onStatus } = {}) {
+  return new Promise((resolve, reject) => {
+    let done = false;
+    let close = () => {};
+    const finish = (error, result) => {
+      if (done) return;
+      done = true;
+      close();
+      signal?.removeEventListener('abort', abort);
+      if (error) reject(error); else resolve(result);
+    };
+    const abort = () => finish(new DOMException('Stopped watching this job.', 'AbortError'));
+    const readResult = async () => {
+      try {
+        const job = await agentService.getJob(id, { signal });
+        if (job.status === 'completed' && job.result) finish(null, job.result);
+        else if (job.status === 'cancelled') finish(new Error('Generation cancelled.'));
+        else if (job.status === 'failed') finish(new Error(job.error?.message || 'Generation failed. Please retry.'));
+        else finish(new Error('Live connection was lost. Reconnect to this job to continue.'));
+      } catch (error) { finish(error); }
+    };
+    if (signal?.aborted) { abort(); return; }
+    signal?.addEventListener('abort', abort, { once: true });
+    close = subscribeResource(`/ws/jobs/${encodeURIComponent(id)}`, {
+      onStatus,
+      onEvent: (event) => {
+        onEvent?.(event);
+        if (['job.completed', 'job.failed', 'job.cancelled'].includes(event.event)) readResult();
+      },
+      onExhausted: readResult,
+    });
+  });
+}
 
-export async function generatePresentation(prompt, generationType = 'slide', context = '') {
-  const response = generationType === 'slide'
-    ? await agentService.generateSlide(prompt)
-    : await agentService.generateContent(prompt, context);
-
-  if (isGenerationResponse(response)) {
-    return getGeneratedMarkdown(response, generationType);
-  }
-
-  const taskId = response?.taskId || response?.task_id;
-  if (!taskId) {
-    throw new Error('The generation service returned no content or task ID.');
-  }
-
-  for (let attempt = 0; attempt < 30; attempt += 1) {
-    const status = await agentService.getGenerationStatus(taskId);
-    const generatedMarkdown = getGeneratedMarkdown(status, generationType);
-    if (generatedMarkdown) return generatedMarkdown;
-    if (['failed', 'error', 'cancelled'].includes(status?.status)) {
-      throw new Error(status?.message || status?.detail || 'Generation failed.');
-    }
-    if (['completed', 'success'].includes(status?.status) && !generatedMarkdown) {
-      throw new Error('Generation completed without returning Markdown.');
-    }
-    await wait(500);
-  }
-
-  throw new Error('Generation timed out while waiting for the backend.');
+export async function generatePresentation(prompt, generationType = 'slide', context = {}) {
+  const { signal, onEvent, onStatus, onJob, ...fields } = context;
+  const accepted = await agentService.createJob({ ...fields, prompt, action: actionName(generationType) }, { signal });
+  onJob?.(accepted.job_id);
+  return watchJob(accepted.job_id, { signal, onEvent, onStatus });
 }

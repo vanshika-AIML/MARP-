@@ -7,7 +7,6 @@ import { DeckSkeletons } from '../components/ui/ContentLoaders';
 import SlideView from '../components/presentation/SlideView';
 import { presentationService } from '../services/presentationService';
 import { parseMarpPresentation } from '../utils/marpParser';
-import { readCustomTemplates } from '../utils/templateCatalog';
 import { useMarpConfig } from '../context/MarpConfigContext';
 const TemplatesPanel = lazy(() => import('../components/dashboard/TemplatesPanel'));
 const sections = [
@@ -25,7 +24,6 @@ export default function Dashboard({ onOpenDeck, onNewDeckWithTemplate }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(null);
   const [query, setQuery] = useState('');
-  const [custom, setCustom] = useState(readCustomTemplates);
   const tabRefs = useRef([]);
   const fetchDecks = async () => {
     setLoading(true); setError('');
@@ -35,7 +33,7 @@ export default function Dashboard({ onOpenDeck, onNewDeckWithTemplate }) {
   };
   useEffect(() => { fetchDecks(); }, []);
   const run = async (id, action) => { if (busy) return; setBusy(id); setError(''); try { await action(); } catch (err) { setError(err.message || 'Please try again.'); } finally { setBusy(null); } };
-  const duplicate = (deck) => run(deck.id, async () => { await presentationService.createPresentation({ title: `${deck.title} (Copy)`, theme: deck.theme, markdown: deck.markdown }); await fetchDecks(); });
+  const duplicate = (deck) => run(deck.id, async () => { await presentationService.createPresentation({ title: `${deck.title} (Copy)`, markdown: deck.markdown }); await fetchDecks(); });
   const remove = (deck) => { if (window.confirm(`Delete ${deck.title}?`)) run(deck.id, async () => { await presentationService.deletePresentation(deck.id); await fetchDecks(); }); };
   const onTabKey = (event, index) => {
     let next;
@@ -61,10 +59,10 @@ export default function Dashboard({ onOpenDeck, onNewDeckWithTemplate }) {
           {loading ? <DeckSkeletons /> : <div className="deck-grid">{filtered.map((deck, index) => <article className="dashboard-deck" style={{ '--card-index': index % 12 }} key={deck.id} aria-busy={busy === deck.id}><button className="deck-open" onClick={() => onOpenDeck(deck.id)} aria-label={`Open ${deck.title}`}><div className="template-preview"><SlideView slide={parseMarpPresentation(deck.markdown).slides[0]} theme={deck.theme} showSlideNumber={false} /></div><h3>{deck.title}</h3></button><div className="deck-meta"><span>{busy === deck.id ? 'Updating…' : `${parseMarpPresentation(deck.markdown).slides.length} slides`}</span><button aria-label={`Duplicate ${deck.title}`} disabled={!!busy} onClick={() => duplicate(deck)}><Copy size={16} /></button><button aria-label={`Delete ${deck.title}`} disabled={!!busy} onClick={() => remove(deck)}><Trash2 size={16} /></button></div></article>)}</div>}
           {!loading && !error && !filtered.length && <div className="empty-state"><FolderOpen size={36} /><h3>{query ? 'No matching presentations' : 'Your story starts with one slide.'}</h3><p>{query ? 'Try a different search.' : 'Create a deck or find a template that feels like you.'}</p><button onClick={() => setTab('templates')}>Explore Templates <ArrowUpRight size={16} /></button></div>}
         </section>}
-        {tab === 'templates' && <Suspense fallback={<DeckSkeletons label="Loading templates" />}><TemplatesPanel customTemplates={custom} onCreate={onNewDeckWithTemplate} /></Suspense>}
+        {tab === 'templates' && <Suspense fallback={<DeckSkeletons label="Loading templates" />}><TemplatesPanel onCreate={onNewDeckWithTemplate} /></Suspense>}
       </div>
       <div role="tabpanel" id="panel-ai" aria-labelledby="tab-ai" hidden={tab !== 'ai'} className="dashboard-tab" tabIndex={0}><CreateWithAI onCreate={onNewDeckWithTemplate} /></div>
-      <div role="tabpanel" id="panel-upload" aria-labelledby="tab-upload" hidden={tab !== 'upload'} className="dashboard-tab" tabIndex={0}><UploadTemplate onSaved={setCustom} /></div>
+      <div role="tabpanel" id="panel-upload" aria-labelledby="tab-upload" hidden={tab !== 'upload'} className="dashboard-tab" tabIndex={0}><UploadTemplate /></div>
     </main>
   </div></div>;
 }

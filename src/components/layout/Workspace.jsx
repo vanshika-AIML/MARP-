@@ -40,7 +40,10 @@ export function Workspace({
   wsStatus,
   wsEventState,
   onGenerate,
-  onApplyMarkdown,
+  onCancelGeneration,
+  generationPending,
+  generationError,
+  sources,
 }) {
   const [splitRatio, setSplitRatio] = useState(() => Number(localStorage.getItem(SPLIT_RATIO_KEY)) || 0.68);
   const workspaceRef = useRef(null);
@@ -133,10 +136,13 @@ export function Workspace({
             <button type="button" className="split-divider hidden md:block" aria-label="Resize presentation and controls" onPointerDown={startDragging} onDoubleClick={() => setSplitRatio(0.68)} />
             <aside className="split-panel h-full shrink-0 hidden md:block">
               <AIAgentPanel
-                onApplyMarkdown={onApplyMarkdown}
                 wsStatus={wsStatus}
                 wsEventState={wsEventState}
                 onGenerate={onGenerate}
+                onCancelGeneration={onCancelGeneration}
+                generationPending={generationPending}
+                generationError={generationError}
+                sources={sources}
               />
             </aside>
           </div>

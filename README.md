@@ -31,11 +31,8 @@ Copy `.env.example` to `.env`:
 # Backend API Base URL (FastAPI /api/v1)
 VITE_API_BASE_URL=http://localhost:8000/api/v1
 
-# Real-time WebSocket Base URL
+# Optional WebSocket origin; omit to derive it from the API origin
 VITE_WS_BASE_URL=ws://localhost:8000
-
-# Standalone development fallback
-VITE_USE_MOCK_FALLBACK=true
 ```
 
 ### 3. Run Development Server
@@ -87,4 +84,4 @@ src/
 
 ## 📖 Module Export API
 
-See [ARCHITECTURE.md](file:///c:/Users/prata/OneDrive/Desktop/MARP%20frontend/ARCHITECTURE.md) for full embedding and integration details.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for module details and [PRODUCTION.md](PRODUCTION.md) for local development, deployment, migrations, backup, and recovery.

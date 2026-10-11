@@ -5,10 +5,19 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
+from app.services.ai.nvidia_nim import AIProviderError
+
 logger = logging.getLogger("marp.errors")
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(AIProviderError)
+    async def ai_provider_error_handler(_request: Request, exc: AIProviderError) -> JSONResponse:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": {"code": exc.code, "message": exc.message}},
+        )
+
     @app.exception_handler(HTTPException)
     async def http_error_handler(_request: Request, exc: HTTPException) -> JSONResponse:
         return JSONResponse(

@@ -8,4 +8,6 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+data/uploads/
+data/media/
 *.egg-info/

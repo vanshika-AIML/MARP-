@@ -1,0 +1,1 @@
+"""Structured presentation conversion helpers."""

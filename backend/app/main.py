@@ -11,9 +11,12 @@ from app.core.config import Settings
 from app.core.database import Database
 from app.core.errors import register_exception_handlers
 from app.core.health import dependency_statuses
+from app.core.job_queue import JobQueue
 from app.core.logging import configure_logging
 from app.core.redis import RedisClient
+from app.core.upload_limits import UploadSizeLimit
 from app.schemas.health import HealthResponse
+from app.services.ai.nvidia_nim import NvidiaNIMClient
 
 logger = logging.getLogger("marp.lifecycle")
 
@@ -43,6 +46,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             resources.push_async_callback(close_resource, "Redis", redis)
             application.state.database = database
             application.state.redis = redis
+            queue = JobQueue(settings)
+            resources.push_async_callback(close_resource, "Job queue", queue)
+            application.state.job_queue = queue
+            nvidia = NvidiaNIMClient(settings)
+            resources.push_async_callback(close_resource, "NVIDIA client", nvidia)
+            application.state.nvidia = nvidia
             statuses = await dependency_statuses(
                 database, redis, settings.dependency_timeout_seconds
             )
@@ -58,6 +67,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Do not enable Starlette debug tracebacks: they bypass the safe error envelope.
     application = FastAPI(title="MARP Studio API", version="0.1.0", lifespan=lifespan)
     application.state.settings = settings
+    application.add_middleware(
+        UploadSizeLimit,
+        path=settings.api_v1_prefix + "/uploads",
+        max_bytes=settings.max_upload_mb * 1024 * 1024,
+    )
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.frontend_origins,

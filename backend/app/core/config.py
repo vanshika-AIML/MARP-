@@ -36,6 +36,23 @@ class Settings(BaseSettings):
     nvidia_api_key: SecretStr = SecretStr("")
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
     nvidia_model: str = "nvidia/nemotron-3-nano-30b-a3b"
+    nvidia_json_mode: bool = False
+    ai_temperature: float = Field(default=0.5, ge=0, le=1)
+    ai_max_tokens: int = Field(default=8192, ge=256, le=32768)
+    ai_timeout_seconds: float = Field(default=90, gt=0, le=300)
+    ai_max_retries: int = Field(default=2, ge=0, le=5)
+    ai_default_slide_count: int = Field(default=10, ge=1, le=40)
+    ai_default_tone: str = Field(default="professional", min_length=1, max_length=50)
+    storage_provider: Literal["local"] = "local"
+    upload_dir: str = "./data/uploads"
+    max_upload_mb: int = Field(default=25, ge=1, le=100)
+    source_context_chars: int = Field(default=24_000, ge=2000, le=60_000)
+    ingestion_timeout_seconds: float = Field(default=60, gt=0, le=120)
+    media_dir: str = "./data/media"
+    max_media_mb: int = Field(default=8, ge=1, le=20)
+    visual_budget_seconds: float = Field(default=45, gt=0, le=45)
+    pixabay_api_key: SecretStr = SecretStr("")
+    stability_api_key: SecretStr = SecretStr("")
 
     @field_validator("api_v1_prefix")
     @classmethod
@@ -71,6 +88,26 @@ class Settings(BaseSettings):
         if not valid:
             raise ValueError("REDIS_URL must use redis:// or rediss:// with a host")
         return value
+
+    @field_validator("nvidia_base_url")
+    @classmethod
+    def validate_nvidia_base_url(cls, value: str) -> str:
+        try:
+            url = urlsplit(value)
+            valid = (
+                url.scheme in {"http", "https"}
+                and bool(url.hostname)
+                and not url.username
+                and not url.password
+                and not url.query
+                and not url.fragment
+            )
+            _ = url.port
+        except ValueError:
+            valid = False
+        if not valid:
+            raise ValueError("NVIDIA_BASE_URL must be an HTTP(S) URL without credentials or query")
+        return value.rstrip("/")
 
     @field_validator("frontend_origins", mode="before")
     @classmethod

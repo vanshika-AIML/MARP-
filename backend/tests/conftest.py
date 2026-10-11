@@ -1,7 +1,6 @@
 import pytest
 
 from app.core.config import Settings
-from app.main import create_app
 
 
 class StubDependency:
@@ -35,6 +34,8 @@ def settings():
 
 @pytest.fixture
 def app_factory(monkeypatch, settings):
+    from app.main import create_app
+
     database = StubDependency()
     redis = StubDependency()
     monkeypatch.setattr("app.main.Database", lambda _settings: database)

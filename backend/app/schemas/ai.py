@@ -99,8 +99,9 @@ class StructuredBlock(AIModel):
             "table": ["headers", "rows"],
             "image": ["alt"],
         }[self.kind]
-        if any(getattr(self, field) is None for field in required):
-            raise ValueError("Missing required block fields")
+        missing = [field for field in required if getattr(self, field) is None]
+        if missing:
+            raise ValueError(f"{self.kind} block requires: {', '.join(missing)}")
         if self.kind == "table" and (
             not self.headers or any(len(row) != len(self.headers) for row in self.rows)
         ):

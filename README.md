@@ -110,3 +110,21 @@ src/
 ## 📖 Module Export API
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for module details and [PRODUCTION.md](PRODUCTION.md) for local development, deployment, migrations, backup, and recovery.
+
+
+### Live refinement acceptance
+
+With `npm run dev:all` running and a configured NVIDIA key, install Chromium once:
+`npx playwright install chromium`. Then run:
+
+```powershell
+node scripts/ui-acceptance.mjs
+node scripts/live-acceptance.mjs
+node scripts/record-walkthrough.mjs
+```
+
+These checks create clearly named local test presentations and use real provider calls.
+The source test creates its own small PDF/Markdown fixtures. Evidence and raw recordings
+go to ignored `artifacts/`; the published 65-second tutorial is in `public/media/`.
+Set `MARP_E2E_URL` only to an origin allowed by the backend. Provider generation errors
+remain visible and retryable; unit/integration provider mocks are separate from these live checks.

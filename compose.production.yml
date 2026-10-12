@@ -8,6 +8,8 @@ x-backend-env: &backend-env
   CORS_ORIGINS: ${CORS_ORIGINS:?set CORS_ORIGINS}
   TRUSTED_HOSTS: ${TRUSTED_HOSTS:?set TRUSTED_HOSTS}
   NVIDIA_API_KEY: ${NVIDIA_API_KEY:-}
+  NVIDIA_BASE_URL: ${NVIDIA_BASE_URL:-https://integrate.api.nvidia.com/v1}
+  NVIDIA_MODEL: ${NVIDIA_MODEL:-nvidia/nemotron-3-super-120b-a12b}
   PIXABAY_API_KEY: ${PIXABAY_API_KEY:-}
   STABILITY_API_KEY: ${STABILITY_API_KEY:-}
   UPLOAD_DIR: /data/uploads
@@ -67,7 +69,7 @@ services:
       redis: { condition: service_healthy }
     volumes: [uploads:/data/uploads, media:/data/media]
     healthcheck:
-      test: [CMD, python, -c, "import os; os.kill(1, 0)"]
+      test: [CMD, arq, --check, app.workers.settings.WorkerSettings]
       interval: 15s
       timeout: 3s
       retries: 3

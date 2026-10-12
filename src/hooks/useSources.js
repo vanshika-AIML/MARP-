@@ -15,35 +15,35 @@ export default function useSources() {
 
   const watch = useCallback((id) => {
     sockets.current.get(id)?.();
-    const close = subscribeResource(`/ws/sources/${encodeURIComponent(id)}`, {
-      onEvent: async (event) => {
+    let stopped = false;
+    let timer;
+    let closeSocket = () => {};
+    const stop = () => { stopped = true; clearTimeout(timer); closeSocket(); sockets.current.delete(id); };
+    const poll = async () => {
+      clearTimeout(timer);
+      try {
+        const source = await uploadService.get(id);
+        if (stopped || !mounted.current) return;
+        update(id, { ...source, message: source.status === 'uploaded' ? 'Waiting for the source worker. You can remove this file and retry.' : source.status });
+        if (['ready', 'failed', 'deleted'].includes(source.status)) { stop(); return; }
+      } catch (reason) {
+        if (stopped || !mounted.current) return;
+        setError(reason.message);
+      }
+      if (!stopped) timer = setTimeout(poll, 10000);
+    };
+    closeSocket = subscribeResource(`/ws/sources/${encodeURIComponent(id)}`, {
+      onEvent: (event) => {
+        if (stopped) return;
         update(id, { status: event.data?.status || event.event.replace('source.', ''), progress: event.progress, message: event.message, error: event.data?.error });
-        if (['source.ready', 'source.failed'].includes(event.event)) {
-          try { update(id, await uploadService.get(id)); } catch { /* durable state is retried by the user */ }
-          sockets.current.delete(id);
-        }
+        clearTimeout(timer);
+        if (['source.ready', 'source.failed'].includes(event.event)) poll();
+        else timer = setTimeout(poll, 10000);
       },
-      onExhausted: () => {
-        let stopped = false;
-        let timer;
-        sockets.current.set(id, () => { stopped = true; clearTimeout(timer); });
-        const poll = async () => {
-          try {
-            const source = await uploadService.get(id);
-            if (stopped || !mounted.current) return;
-            update(id, source);
-            if (['ready', 'failed', 'deleted'].includes(source.status)) sockets.current.delete(id);
-            else timer = setTimeout(poll, 2000);
-          } catch (reason) {
-            if (stopped || !mounted.current) return;
-            setError(reason.message);
-            timer = setTimeout(poll, 5000);
-          }
-        };
-        poll();
-      },
+      onExhausted: poll,
     });
-    sockets.current.set(id, close);
+    sockets.current.set(id, stop);
+    timer = setTimeout(poll, 10000);
   }, [update]);
 
   const upload = useCallback(async (files) => {
@@ -54,7 +54,7 @@ export default function useSources() {
       try {
         const accepted = await uploadService.upload(file);
         if (!mounted.current) return;
-        setSources((current) => current.map((source) => source.id === temporaryId ? { ...source, id: accepted.source_id, status: accepted.status, progress: 5 } : source));
+        setSources((current) => current.map((source) => source.id === temporaryId ? { ...source, id: accepted.source_id, status: accepted.status, progress: 0 } : source));
         watch(accepted.source_id);
       } catch (reason) {
         update(temporaryId, { status: 'failed', error: reason.message });
@@ -72,6 +72,6 @@ export default function useSources() {
   }, []);
 
   const readyIds = sources.filter((source) => source.status === 'ready').map((source) => source.id);
-  const blocked = sources.some((source) => !['ready', 'failed'].includes(source.status));
+  const blocked = sources.some((source) => source.status !== 'ready');
   return { sources, upload, remove, readyIds, blocked, error };
 }

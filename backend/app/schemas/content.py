@@ -72,9 +72,16 @@ class PresentationRead(PresentationListItem):
     markdown: str
 
 
+class ExportStyle(Input):
+    background: Annotated[str, Field(pattern=r"^#[0-9a-fA-F]{6}$")] = "#ffffff"
+    text: Annotated[str, Field(pattern=r"^#[0-9a-fA-F]{6}$")] = "#0f172a"
+    accent: Annotated[str, Field(pattern=r"^#[0-9a-fA-F]{6}$")] = "#0284c7"
+
+
 class PresentationExport(Input):
     title: Name | None = None
     markdown: Markdown | None = None
+    style: ExportStyle | None = None
 
 
 class SlideCreate(Input):

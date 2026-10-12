@@ -41,6 +41,9 @@ def provider(monkeypatch):
         if isinstance(output, int):
             return httpx.Response(output, text="upstream-private-details")
         text = output if isinstance(output, str) else json.dumps(output)
+        if json.loads(request.content).get("stream"):
+            event = json.dumps({"choices": [{"delta": {"content": text}}]})
+            return httpx.Response(200, text=f"data: {event}\n\ndata: [DONE]\n\n")
         return httpx.Response(200, json={"choices": [{"message": {"content": text}}]})
 
     def factory(settings):
@@ -364,3 +367,30 @@ async def test_validation_and_foreign_targets_before_nim(client, provider):
         "/ai/generate", json={"action": "generate_full_deck", "prompt": "x"}
     )
     assert response.status_code == 502 and "upstream-private" not in response.text
+
+
+async def test_rewrite_prompt_requests_one_slide(client, provider):
+    original, rows = await existing(client)
+    await generate(
+        client, provider, "rewrite_slide", deck("Revised"),
+        presentation_id=original["id"], slide_id=rows[0]["id"],
+    )
+    prompt = provider["calls"][-1]["messages"][1]["content"]
+    assert "Requested output slide count, when applicable: 1." in prompt
+
+async def test_known_presentation_envelope_is_still_schema_validated(client, provider):
+    result = await generate(
+        client, provider, "generate_full_deck", {"presentation": deck("Wrapped")},
+        options={"slide_count": 1},
+    )
+    assert result["presentation"]["slides"][0]["title"] == "Wrapped"
+
+async def test_block_repair_receives_required_fields(client, provider):
+    malformed = deck("Facts")
+    malformed["slides"][0]["content"] = [{"kind": "stat", "value": "12%"}]
+    provider["responses"].append(malformed)
+    result = await generate(
+        client, provider, "generate_full_deck", deck("Repaired"), options={"slide_count": 1},
+    )
+    assert result["persisted"]
+    assert "stat block requires: label" in provider["calls"][-1]["messages"][-1]["content"]

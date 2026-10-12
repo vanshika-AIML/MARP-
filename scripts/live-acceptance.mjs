@@ -1,0 +1,100 @@
+import { chromium, expect } from '@playwright/test';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+const base=process.env.MARP_E2E_URL || 'http://localhost:5173';
+await mkdir('artifacts', { recursive: true });
+const pdf = execFileSync('uv', ['run', 'python', '-c', 'import sys; from tests.source_fixtures import source_bytes; sys.stdout.buffer.write(source_bytes("pdf"))'], { cwd: 'backend' });
+await writeFile('artifacts/facts.pdf', pdf);
+await writeFile('artifacts/notes.md', '# Launch facts\nThe project has 64 pilot customers. These figures are demonstration data.\n');
+const browser=await chromium.launch();
+const context=await browser.newContext({viewport:{width:1440,height:1000}});
+const page=await context.newPage();
+const errors=[],events=[],requests=[],uploads=[],results={};
+page.on('pageerror',e=>errors.push(e.message));
+page.on('websocket',ws=>ws.on('framereceived',({payload})=>{try{const e=JSON.parse(String(payload));if(e.event)events.push(e);}catch{}}));
+page.on('response',async r=>{
+ if(r.url().endsWith('/ai/jobs')&&r.request().method()==='POST'&&r.status()===202)requests.push({body:r.request().postDataJSON(),...(await r.json())});
+ if(r.url().endsWith('/uploads')&&r.request().method()==='POST'&&r.status()===202)uploads.push(await r.json());
+});
+const get=async path=>{const r=await context.request.get(base+'/api/v1'+path);expect(r.ok()).toBeTruthy();return r.json();};
+const terminal=async(id,status='completed')=>{let j;await expect.poll(async()=>{j=await get('/ai/jobs/'+id);if(j.status==='failed'&&status!=='failed')throw Error(j.error?.message);return j.status;},{timeout:240000,intervals:[1500]}).toBe(status);return j;};
+try {
+ await page.goto(base+'/dashboard');
+ await page.getByRole('tab',{name:'Create with AI',exact:true}).click();
+ await page.locator('#create-ai-prompt').fill('Use the uploaded source facts to create two concise slides for the project team. Cite sources. Include revenue growth and pilot customer count. Do not invent facts.');
+ await page.locator('#ai-slide-count').fill('2');
+ await page.locator('input[type=file]').first().setInputFiles({name:'unsafe.exe',mimeType:'application/x-msdownload',buffer:Buffer.from('not an executable')});
+ await expect(page.getByText(/unsupported|not supported|not allowed/i).first()).toBeVisible();
+ await expect(page.getByRole('button',{name:'Generate presentation',exact:true})).toBeDisabled();
+ await page.getByRole('button',{name:'Remove unsafe.exe'}).click();
+ results.uploadError=true;
+ await page.locator('input[type=file]').first().setInputFiles(['artifacts/facts.pdf','artifacts/notes.md']);
+ await expect.poll(()=>uploads.length).toBe(2);
+ for(const u of uploads) await expect.poll(async()=>(await get('/uploads/'+u.source_id)).status,{timeout:60000}).toBe('ready');
+ await expect(page.getByRole('button',{name:'Generate presentation',exact:true})).toBeEnabled({timeout:15000});
+ await page.getByRole('button',{name:'Generate presentation',exact:true}).click();
+ await expect.poll(()=>requests.length).toBe(1);
+ expect(requests[0].body.source_ids.sort()).toEqual(uploads.map(u=>u.source_id).sort());
+ try { await terminal(requests[0].job_id); } catch {
+  await expect(page.getByRole('alert')).toBeVisible();
+  results.realProviderFailureVisible=true;
+  await page.getByRole('button',{name:'Generate presentation',exact:true}).click();
+  await expect.poll(()=>requests.length).toBe(2);
+  await terminal(requests.at(-1).job_id);
+ }
+ const sourceJobCount=requests.length;
+ await page.waitForURL('**/editor/**',{timeout:20000});
+ const id=page.url().split('/').at(-1);
+ let saved=await get('/presentations/'+id);
+ expect(saved.markdown).toMatch(/12/);expect(saved.markdown).toMatch(/64/);
+ results.fileGeneration={id,sourceIds:requests[0].body.source_ids};
+ await page.getByRole('button',{name:'Whole Deck',exact:true}).click();
+ await page.locator('#studio-prompt').fill('Refine the wording for an executive audience. Preserve all facts, source references, slide count and slide order.');
+ await page.getByRole('button',{name:'Run action',exact:true}).click();
+ await expect.poll(()=>requests.length).toBe(sourceJobCount+1);
+ await page.getByRole('button',{name:'Cancel generation',exact:true}).click();
+ await terminal(requests.at(-1).job_id,'cancelled');
+ await expect(page.getByRole('button',{name:'Retry action',exact:true})).toBeVisible({timeout:15000});
+ expect((await get('/presentations/'+id)).markdown).toBe(saved.markdown);
+ results.cancel=true;
+ await page.getByRole('button',{name:'Retry action',exact:true}).click();
+ await expect.poll(()=>requests.length).toBe(sourceJobCount+2);
+ await terminal(requests.at(-1).job_id);
+ await expect(page.locator('#studio-prompt')).toBeEnabled({timeout:15000});
+ expect((await get('/presentations/'+id+'/slides')).length).toBe(2);
+ results.wholeDeck=true;results.retry=true;
+ const resize=page.getByRole('separator',{name:'Resize AI Agent'});
+ await resize.focus();await page.keyboard.press('End');await expect(resize).toHaveAttribute('aria-valuenow','440');
+ await page.getByRole('button',{name:'Hide AI Agent',exact:true}).click();
+ await expect(page.locator('#split-agent')).toHaveCount(0);
+ await page.getByRole('button',{name:'Show AI Agent',exact:true}).click();
+ results.panel=true;
+ for(const [label,ext] of [['HTML Presentation','html'],['MARP Markdown (.md)','md'],['PowerPoint (.pptx)','pptx']]){
+  await page.getByRole('button',{name:'Export',exact:true}).click();
+  await page.getByRole('button',{name:new RegExp(label.replace(/[.*+?^$\{\}()|[\]\\]/g,'\\$&'))}).click();
+  const pending=page.waitForEvent('download');
+  await page.getByRole('button',{name:'Export Now'}).click();
+  const download=await pending;await download.saveAs('artifacts/grounded.'+ext);
+  await expect(page.getByRole('button',{name:'Export Now'})).toBeHidden({timeout:10000});
+ }
+ expect(await readFile('artifacts/grounded.md','utf8')).toMatch(/12/);
+ const html=await readFile('artifacts/grounded.html','utf8');
+ const exported=await context.newPage();await exported.setContent(html);
+ expect(await exported.locator('.slide-page').count()).toBe(2);await expect(exported.locator('body')).toContainText('64');
+ await exported.pdf({path:'artifacts/grounded.pdf',preferCSSPageSize:true,printBackground:true});
+ await exported.close();
+ await page.getByRole('button',{name:'Export',exact:true}).click();
+ await page.getByRole('button',{name:/Print \/ Save as PDF/}).click();
+ const popup=context.waitForEvent('page');await page.getByRole('button',{name:'Export Now'}).click();
+ const print=await popup;await expect(print.locator('.slide-page')).toHaveCount(2);
+ await print.close();results.exports=true;
+ saved=await get('/presentations/'+id);
+ await page.reload();await expect(page.locator('.split-preview')).toBeVisible();
+ expect((await get('/presentations/'+id)).markdown).toBe(saved.markdown);results.refresh=true;
+ await page.screenshot({path:'artifacts/grounded-editor.png'});
+ results.progress=events.some(e=>e.event==='prompt.analysis')&&events.some(e=>e.event==='job.completed')&&events.some(e=>e.event==='source.ready');
+ expect(results.progress).toBeTruthy();expect(errors).toEqual([]);
+} catch(e) { results.failure=e.message;await page.screenshot({path:'artifacts/acceptance-failure.png'});throw e; }
+finally {await writeFile('artifacts/live-acceptance.json',JSON.stringify({results,errors,requests,uploads,events},null,2));await context.close();await browser.close();}
+console.log(JSON.stringify(results));
+

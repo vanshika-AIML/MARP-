@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Response
+import re
+from uuid import UUID
+
+from fastapi import APIRouter, HTTPException, Request, Response
 from starlette.concurrency import run_in_threadpool
 
 from app.api.v1.dependencies import ContentRoute, Pagination, ResourceID, Service, changes
@@ -20,13 +23,34 @@ router = APIRouter(tags=["presentations"], route_class=ContentRoute)
 
 
 @router.post("/presentations/{id}/export/pptx")
-async def export_presentation(id: ResourceID, payload: PresentationExport, service: Service):
+async def export_presentation(
+    id: ResourceID, payload: PresentationExport, service: Service, request: Request
+):
+    from app.models.media import MediaAsset
     from app.services.pptx_export import export_pptx
+    from app.services.visuals.storage import LocalMediaStorageProvider
 
     presentation = await service.require(Presentation, id)
     markdown = payload.markdown if payload.markdown is not None else presentation.markdown
     service.parse(markdown)
-    content = await run_in_threadpool(export_pptx, payload.title or presentation.title, markdown)
+    # Embed only existing, validated local assets. Never fetch arbitrary Markdown URLs.
+    media = {}
+    storage = LocalMediaStorageProvider(request.app.state.settings)
+    for asset_id in set(re.findall(
+        r"/media/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/file",
+        markdown,
+    )):
+        asset = await service.session.get(MediaAsset, UUID(asset_id))
+        if asset is None:
+            raise HTTPException(404, "A presentation image is unavailable")
+        path = storage.path(asset.stored_path)
+        if not path.is_file():
+            raise HTTPException(404, "A presentation image is unavailable")
+        media[asset_id] = path
+    content = await run_in_threadpool(
+        export_pptx, payload.title or presentation.title, markdown,
+        payload.style.model_dump() if payload.style else None, media,
+    )
     return Response(
         content,
         media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",

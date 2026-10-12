@@ -168,12 +168,33 @@ html[data-ambient-intensity="dynamic"] :is(.hero-ambient, .ai-ambient-geometry, 
 .deck-card-actions { opacity: .45; transform: translateY(3px); transition: opacity var(--transition-fast), transform var(--transition-fast); }
 .deck-card:hover .deck-card-actions, .deck-card:focus-within .deck-card-actions { opacity: 1; transform: translateY(0); }
 
-.split-preview { width: var(--split-ratio); flex: 0 0 var(--split-ratio); }
-.split-panel { width: calc(100% - var(--split-ratio) - 10px); min-width: 300px; }
+.split-preview { flex: 1; min-width: 0; min-height: 0; }
+.split-panel { width: var(--agent-width); flex: 0 0 var(--agent-width); min-height: 0; overflow: auto; }
 .split-divider { width: 10px; flex: 0 0 10px; cursor: col-resize; border: 0; border-left: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); background: var(--bg-app); position: relative; }
 .split-divider::after { content: ''; position: absolute; top: 50%; left: 3px; width: 2px; height: 34px; transform: translateY(-50%); border-radius: 99px; background: var(--border-strong); box-shadow: 3px 0 var(--border-strong); }
 .split-divider:hover, .split-divider:focus-visible { background: var(--accent-soft); outline: none; }
 body.is-resizing { cursor: col-resize; user-select: none; }
-@media (max-width: 768px) {
-  .split-preview { width: 100%; flex-basis: 100%; }
+ .split-columns { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+.split-editor { flex: 0 0 28%; min-width: 160px; overflow: hidden; border-right: 1px solid var(--border-subtle); }
+.split-design-toolbar { background: var(--surface); border-bottom: 1px solid var(--border-subtle); }
+.agent-toggle { padding: 5px 12px; font-size: 11px; color: var(--accent); }
+.agent-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+@media (max-width: 1100px) {
+  .split-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); overflow-y: auto; align-content: start; }
+  .split-editor, .split-preview { height: 420px; min-width: 0; }
+  .split-panel { grid-column: 1 / -1; width: 100%; min-height: 300px; }
+  .split-divider { display: none; }
+}
+@media (max-width: 640px) {
+  .split-columns { grid-template-columns: minmax(0, 1fr); }
+  .split-editor { height: 250px; }
+  .split-preview { height: 330px; }
+}
+
+@media (max-width: 900px) {
+  .workspace-navbar { flex-wrap: wrap; gap: 6px; padding-block: 8px; }
+  .workspace-brand { flex: 1 1 100%; min-width: 0; gap: 8px; }
+  .workspace-brand > div:last-child { min-width: 0; flex: 1; }
+  .workspace-brand button[title="Click to rename"] { max-width: 40vw; }
+  .workspace-view-tabs { min-width: 0; }
 }

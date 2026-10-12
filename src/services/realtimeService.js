@@ -39,7 +39,7 @@ export function subscribeResource(path, { onEvent, onStatus = () => {}, onExhaus
       let event;
       try { event = JSON.parse(message.data); } catch { return; }
       if (typeof event.event !== 'string') return;
-      const key = `${event.event}:${event.updated_at || ''}:${event.progress || 0}`;
+      const key = `${event.event}:${event.updated_at || ''}:${event.progress || 0}:${JSON.stringify(event.data || {})}`;
       if (key === lastEventKey) return;
       lastEventKey = key;
       onEvent?.(event);

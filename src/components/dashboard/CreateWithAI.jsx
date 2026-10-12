@@ -9,6 +9,7 @@ import SourcePicker from '../presentation/SourcePicker';
 export default function CreateWithAI({ onCreate }) {
   const [sectionRef, visible] = useInView();
   const [prompt, setPrompt] = useState('');
+  const [slideCount, setSlideCount] = useState(5);
   const [error, setError] = useState('');
   const generation = useGeneration();
   const sources = useSources();
@@ -18,7 +19,7 @@ export default function CreateWithAI({ onCreate }) {
     if (!prompt.trim() || generation.pending || sources.blocked) return;
     setError('');
     try {
-      const result = await generation.run(prompt.trim(), 'deck', { source_ids: sources.readyIds, options: { persist: true } });
+      const result = await generation.run(prompt.trim(), 'deck', { source_ids: sources.readyIds, options: { persist: true, slide_count: slideCount } });
       if (!result.presentation_id) throw new Error('Generation completed without a saved presentation.');
       await onCreate({ presentationId: result.presentation_id });
     } catch (reason) { setError(reason.message); }
@@ -34,6 +35,7 @@ export default function CreateWithAI({ onCreate }) {
       {generation.pending ? <><GenerationVisual event={generation.event} /><button type="button" className="secondary-cta" onClick={generation.cancel}>Cancel generation</button></> : <>
         <label htmlFor="create-ai-prompt">What should your presentation make clear?</label>
         <textarea id="create-ai-prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="A five-slide introduction to sustainable design for a curious audience…" rows={5} />
+        <label className="text-xs" htmlFor="ai-slide-count">Number of slides <input id="ai-slide-count" className="ml-2 w-16 rounded border px-2 py-1" type="number" min="1" max="40" required value={slideCount} onChange={(event) => setSlideCount(event.target.value === '' ? '' : Number(event.target.value))} /></label>
         <SourcePicker controller={sources} compact />
         <button className="primary-cta" disabled={!prompt.trim() || sources.blocked} type="submit"><PanelsTopLeft size={17} /> Generate presentation</button>
       </>}

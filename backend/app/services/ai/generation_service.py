@@ -90,7 +90,7 @@ class GenerationService:
 
         chunks = []
         received_characters = 0
-        reported_progress = 20
+        reported_characters = 0
         async for chunk in self.client.stream(
             messages,
             temperature=temperature,
@@ -100,13 +100,13 @@ class GenerationService:
         ):
             chunks.append(chunk)
             received_characters += len(chunk)
-            progress = min(
-                60,
-                max(21, 20 + received_characters * 40 // (parameters.max_tokens * 4)),
-            )
-            if progress > reported_progress:
-                await self._progress("prompt.analysis", progress)
-                reported_progress = progress
+            if received_characters - reported_characters >= 1024 or reported_characters == 0:
+                # Token budget is a ceiling, not the eventual output size. Keep the
+                # milestone percentage stable and report actual received content.
+                await self._progress(
+                    "prompt.analysis", 20, {"received_characters": received_characters}
+                )
+                reported_characters = received_characters
         return "".join(chunks)
 
     async def _parameters(self, request):
@@ -250,8 +250,9 @@ class GenerationService:
         if len(context_json) > 160_000:
             raise HTTPException(400, "Deck exceeds the AI context limit; shorten the deck first")
         count = (
-            len(snapshot.rows)
-            if request.action == "improve_entire_deck"
+            1 if mode in {"append", "replace", "merge"}
+            else len(snapshot.rows) if request.action == "improve_entire_deck"
+            else min(5, max(2, parameters.default_slide_count)) if mode == "split"
             else parameters.default_slide_count
         )
         messages = build_messages(
@@ -276,14 +277,31 @@ class GenerationService:
                 parameters.temperature if attempt == 0 else 0,
             )
             try:
-                result = schema.model_validate(parse_json(raw), extra="ignore")
+                data = parse_json(raw)
+                # NIM sometimes mirrors the context's presentation envelope. Unwrap
+                # only that unambiguous envelope; validate every inner field normally.
+                if (
+                    schema is StructuredPresentation
+                    and isinstance(data, dict)
+                    and set(data) == {"presentation"}
+                    and isinstance(data["presentation"], dict)
+                ):
+                    data = data["presentation"]
+                result = schema.model_validate(data, extra="ignore")
                 self._validate_result(result, request, snapshot, parameters)
                 if isinstance(result, StructuredPresentation):
                     for slide in result.slides:
                         slide.media = None
                         slide.visual_intent.source_attribution = None
                 return result
-            except (ValueError, TypeError, RecursionError):
+            except (ValueError, TypeError, RecursionError) as exc:
+                if isinstance(exc, ValidationError):
+                    issues = "; ".join(
+                        f"{'.'.join(map(str, error['loc']))}: {error['msg']}"
+                        for error in exc.errors(include_input=False, include_url=False)
+                    )[:2000]
+                else:
+                    issues = "Check the JSON structure and the action's required slide count."
                 if attempt:
                     raise AIProviderError(
                         502, "ai_invalid_structured_output", "AI returned invalid structured output"
@@ -295,7 +313,7 @@ class GenerationService:
                         "role": "user",
                         "content": "The output did not match the schema or action rules. "
                         "Return a corrected JSON object, including the requested slide count. "
-                        "Do not invent missing facts or return prose.",
+                        "Do not invent missing facts or return prose. Validation issues: " + issues,
                     },
                 ]
         raise AssertionError("unreachable")

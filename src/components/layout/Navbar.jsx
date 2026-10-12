@@ -52,11 +52,12 @@ export function Navbar({
   ];
 
   return (
-    <header className="h-12 bg-white border-b border-slate-200/90 flex items-center justify-between px-3.5 select-none z-20">
+    <header className="workspace-navbar min-h-12 shrink-0 bg-white border-b border-slate-200/90 flex items-center justify-between px-3.5 select-none z-20">
       {/* Left: Brand & Navigation */}
-      <div className="flex items-center gap-3">
+      <div className="workspace-brand flex items-center gap-3">
         <button
           type="button"
+          aria-label="Open dashboard"
           onClick={onOpenDashboard}
           className="flex items-center gap-2 text-slate-800 hover:text-sky-600 transition-colors font-semibold text-xs"
         >
@@ -128,7 +129,7 @@ export function Navbar({
 
       {/* Center: View Layout Switcher */}
       {activePage === 'editor' && (
-        <div className="hidden md:flex items-center">
+        <div className="workspace-view-tabs flex items-center">
           <Tabs
             tabs={viewTabs}
             activeTab={viewMode}

@@ -36,7 +36,7 @@ export function Sidebar({
             type="button"
             onClick={onToggle}
             className="absolute -right-3 top-3 z-30 p-1 bg-white border border-slate-200 rounded-full text-slate-400 hover:text-slate-700 shadow-xs transition-colors"
-            title="Collapse Sidebar"
+            title="Collapse Sidebar" aria-label="Collapse Sidebar"
           >
             <PanelLeftClose className="w-3.5 h-3.5" />
           </button>
@@ -47,6 +47,7 @@ export function Sidebar({
             <button
               type="button"
               onClick={onToggle}
+              aria-label="Expand Slide Navigator"
               className="p-1.5 rounded-md text-slate-600 hover:bg-slate-200/60 transition-colors"
             >
               <PanelLeftOpen className="w-4 h-4" />

@@ -46,7 +46,8 @@ async def test_http_arq_sources_to_grounded_deck(
                 }
             ],
         }
-        return httpx.Response(200, json={"choices": [{"message": {"content": json.dumps(deck)}}]})
+        event = json.dumps({"choices": [{"delta": {"content": json.dumps(deck)}}]})
+        return httpx.Response(200, text=f"data: {event}\n\ndata: [DONE]\n\n")
 
     nim = NvidiaNIMClient(
         settings.model_copy(update={"nvidia_api_key": SecretStr("mock-only")}),

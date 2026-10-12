@@ -29,12 +29,12 @@ export function PresentationControls({
 }) {
   return (
     <div
-      className={`flex items-center justify-between px-3 py-1.5 bg-white border-t border-slate-200/90 select-none ${className}`}
+      className={`flex flex-wrap shrink-0 gap-1 items-center justify-between px-3 py-1.5 bg-white border-t border-slate-200/90 select-none ${className}`}
     >
       {/* Left: Navigation Controls */}
       <div className="flex items-center gap-1.5">
         <Tooltip text="Previous Slide" shortcut="←">
-          <button
+          <button aria-label="Previous Slide"
             type="button"
             onClick={onPrev}
             disabled={currentSlide <= 0}
@@ -49,7 +49,7 @@ export function PresentationControls({
         </span>
 
         <Tooltip text="Next Slide" shortcut="→">
-          <button
+          <button aria-label="Next Slide"
             type="button"
             onClick={onNext}
             disabled={currentSlide >= totalSlides - 1}
@@ -64,7 +64,7 @@ export function PresentationControls({
       <div className="flex items-center gap-1 text-slate-600">
         {onZoomOut && (
           <Tooltip text="Zoom Out">
-            <button
+            <button aria-label="Zoom Out"
               type="button"
               onClick={onZoomOut}
               className="p-1 rounded hover:bg-slate-100 transition-colors"
@@ -80,7 +80,7 @@ export function PresentationControls({
 
         {onZoomIn && (
           <Tooltip text="Zoom In">
-            <button
+            <button aria-label="Zoom In"
               type="button"
               onClick={onZoomIn}
               className="p-1 rounded hover:bg-slate-100 transition-colors"
@@ -92,7 +92,7 @@ export function PresentationControls({
 
         {onZoomReset && zoom !== 1 && (
           <Tooltip text="Reset Zoom">
-            <button
+            <button aria-label="Reset Zoom"
               type="button"
               onClick={onZoomReset}
               className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"

@@ -8,3 +8,7 @@ dist/
 .vscode/
 .DS_Store
 Thumbs.db
+# Local browser evidence and raw recordings
+artifacts/
+playwright-report/
+test-results/

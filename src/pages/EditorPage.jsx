@@ -27,7 +27,7 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRout
   const [preparing, setPreparing] = useState(false);
   const [generatedResult, setGeneratedResult] = useState(null);
   const actionActive = React.useRef(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => !window.matchMedia?.('(max-width: 767px)').matches);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isPresenting, setIsPresenting] = useState(false);
@@ -60,14 +60,19 @@ export function EditorPage({ onOpenDashboard, onNewDeckWithTemplate, previewRout
     }
     if (DECK_ACTIONS.has(action) && !id) throw new Error('Save this presentation before running a deck action.');
     const result = await generation.run(prompt, action, fields);
-    if (result.persisted) await loadPresentation(result.presentation_id || id);
+    if (result.persisted) {
+      await loadPresentation(result.presentation_id || id);
+      if (SLIDE_ACTIONS.has(action)) setActiveSlide(activeSlide);
+      setPreviewStatus({ viewMode: 'split' });
+      setIsAiModalOpen(false);
+    }
     if (!result.persisted || ['generate_speaker_notes', 'suggest_visuals', 'reorder_suggestions'].includes(action)) {
       setGeneratedResult({ ...result, suggestedOrder: result.reorder_suggestions?.slide_ids.map((slideId) => backendSlides.findIndex((slide) => slide.id === slideId) + 1).join(', ') });
     }
     return result;
     } catch (error) { setActionError(error.message); throw error; }
     finally { actionActive.current = false; setPreparing(false); }
-  }, [activeSlide, generation, id, loadPresentation, sources.readyIds, savePresentation, theme]);
+  }, [activeSlide, generation, id, loadPresentation, sources.readyIds, savePresentation, theme, setActiveSlide, setPreviewStatus]);
 
   const save = () => savePresentation().then(() => setActionError('')).catch((error) => setActionError(error.message));
   const navigateAfterSave = async (action) => {

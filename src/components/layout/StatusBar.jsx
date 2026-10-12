@@ -16,9 +16,9 @@ export function StatusBar({
   apiEndpoint = 'FastAPI v1',
 }) {
   return (
-    <footer className="h-7 bg-white border-t border-slate-200 px-3 flex items-center justify-between text-[11px] text-slate-500 font-mono select-none z-20">
+    <footer className="workspace-status h-7 shrink-0 whitespace-nowrap overflow-x-auto gap-6 bg-white border-t border-slate-200 px-3 flex items-center justify-between text-[11px] text-slate-500 font-mono select-none z-20">
       {/* Left Metrics */}
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         <div className="flex items-center gap-1.5 text-slate-600">
           <FileText className="w-3 h-3 text-slate-400" />
           <span>{wordCount} words</span>
@@ -40,7 +40,7 @@ export function StatusBar({
       </div>
 
       {/* Right Backend Status */}
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         <div className="flex items-center gap-1.5 text-slate-600">
           <Server className="w-3 h-3 text-slate-400" />
           <span className="text-[10px] text-slate-500">{apiEndpoint}</span>

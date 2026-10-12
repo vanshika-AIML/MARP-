@@ -7,6 +7,7 @@ import { FileCode, FileText, Printer, Presentation, Check, Download } from 'luci
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import { downloadMarkdownFile, downloadHtmlPresentation, triggerPrintToPdf, downloadExportResult } from '../../utils/exportHelpers';
+import { getTheme } from '../../utils/themeRegistry';
 import { presentationService } from '../../services/presentationService';
 
 export function ExportModal({
@@ -20,7 +21,7 @@ export function ExportModal({
   const [errorMsg, setErrorMsg] = useState(null);
 
   const handleExport = async () => {
-    if (!presentation) return;
+    if (!presentation || isExporting) return;
     setIsExporting(true);
     setSuccessMsg(null);
     setErrorMsg(null);
@@ -42,6 +43,10 @@ export function ExportModal({
         const result = await presentationService.exportPresentation(presentation.id, 'pptx', {
           markdown: presentation.markdown,
           title: presentation.title,
+          style: Object.fromEntries(['background', 'text', 'accent'].map((key) => {
+            const color = getTheme(presentation.theme).colors[key];
+            return [key, /^#[0-9a-f]{6}$/i.test(color) ? color : { background: '#ffffff', text: '#0f172a', accent: '#0284c7' }[key]];
+          })),
         });
         await downloadExportResult(result, presentation.title, 'pptx');
         setSuccessMsg('PowerPoint file downloaded successfully!');
@@ -81,7 +86,7 @@ export function ExportModal({
     {
       id: 'pptx',
       title: 'PowerPoint (.pptx)',
-      description: 'Editable text slides with Markdown in notes. Use HTML/PDF for visual styling and images.',
+      description: 'Editable themed text and stored images, with Markdown in notes. HTML/PDF preserve exact slide CSS. External linked images remain links.',
       icon: Presentation,
     },
   ];

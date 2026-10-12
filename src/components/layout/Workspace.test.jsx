@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import Workspace from './Workspace';
 
 vi.mock('./Sidebar', () => ({ default: () => <aside>Sidebar</aside> }));
@@ -36,12 +36,22 @@ describe('Workspace view modes', () => {
     onApplyMarkdown: vi.fn(),
   };
 
-  it('renders the presentation and AI agent, without the Markdown editor, in split view', () => {
+  it('renders the editor, presentation and AI agent in split view', () => {
     render(<Workspace {...props} />);
     expect(screen.getByText('Rendered Presentation')).toBeInTheDocument();
     expect(screen.getByText('AI Presentation Agent')).toBeInTheDocument();
-    expect(screen.queryByText('Markdown editor')).not.toBeInTheDocument();
+    expect(screen.getByText('Markdown editor')).toBeInTheDocument();
     expect(document.querySelector('.split-design-toolbar')).toBeInTheDocument();
+  });
+  it('collapses and keyboard-resizes the agent', () => {
+    render(<Workspace {...props} />);
+    const divider = screen.getByRole('separator');
+    fireEvent.keyDown(divider, { key: 'End' });
+    expect(divider).toHaveAttribute('aria-valuenow', '440');
+    fireEvent.click(screen.getByRole('button', { name: 'Hide AI Agent' }));
+    expect(screen.queryByText('AI Presentation Agent')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show AI Agent' }));
+    expect(screen.getByText('AI Presentation Agent')).toBeInTheDocument();
   });
   it.each(['editor', 'preview'])('preserves the %s view structure', (viewMode) => {
     render(<Workspace {...props} viewMode={viewMode} />);

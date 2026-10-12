@@ -28,16 +28,17 @@ export function EditorToolbar({
   onFormat,
   currentTheme = 'default',
   onChangeTheme,
+  disabled = false,
 }) {
   const { config } = useMarpConfig();
   const themes = [...new Map([...THEME_REGISTRY, ...config.themes].map((theme) => [theme.id, theme])).values()].filter((theme) => theme.active !== false);
   return (
-    <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-50 border-b border-slate-200/80 select-none overflow-x-auto">
+    <fieldset disabled={disabled} aria-label="Slide editing controls" className="flex flex-wrap items-center justify-between gap-2 px-2.5 py-1.5 bg-slate-50 border-b border-slate-200/80 select-none min-w-0">
       {/* Left Formatting Group */}
-      {onFormat && <div className="flex items-center gap-0.5">
+      {onFormat && <div className="flex flex-wrap items-center gap-0.5">
         {/* Headings */}
         <Tooltip text="Heading 1" shortcut="# ">
-          <button
+          <button aria-label="Heading 1"
             type="button"
             onClick={() => onFormat('h1')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -47,7 +48,7 @@ export function EditorToolbar({
         </Tooltip>
 
         <Tooltip text="Heading 2" shortcut="## ">
-          <button
+          <button aria-label="Heading 2"
             type="button"
             onClick={() => onFormat('h2')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -57,7 +58,7 @@ export function EditorToolbar({
         </Tooltip>
 
         <Tooltip text="Heading 3" shortcut="### ">
-          <button
+          <button aria-label="Heading 3"
             type="button"
             onClick={() => onFormat('h3')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -70,7 +71,7 @@ export function EditorToolbar({
 
         {/* Text styling */}
         <Tooltip text="Bold" shortcut="Ctrl+B">
-          <button
+          <button aria-label="Bold"
             type="button"
             onClick={() => onFormat('bold')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -80,7 +81,7 @@ export function EditorToolbar({
         </Tooltip>
 
         <Tooltip text="Italic" shortcut="Ctrl+I">
-          <button
+          <button aria-label="Italic"
             type="button"
             onClick={() => onFormat('italic')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -90,7 +91,7 @@ export function EditorToolbar({
         </Tooltip>
 
         <Tooltip text="Code / Block">
-          <button
+          <button aria-label="Code / Block"
             type="button"
             onClick={() => onFormat('code')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -100,7 +101,7 @@ export function EditorToolbar({
         </Tooltip>
 
         <Tooltip text="Blockquote">
-          <button
+          <button aria-label="Blockquote"
             type="button"
             onClick={() => onFormat('quote')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -113,7 +114,7 @@ export function EditorToolbar({
 
         {/* Lists & Tables */}
         <Tooltip text="Bulleted List">
-          <button
+          <button aria-label="Bulleted List"
             type="button"
             onClick={() => onFormat('ul')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -123,7 +124,7 @@ export function EditorToolbar({
         </Tooltip>
 
         <Tooltip text="Numbered List">
-          <button
+          <button aria-label="Numbered List"
             type="button"
             onClick={() => onFormat('ol')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -133,7 +134,7 @@ export function EditorToolbar({
         </Tooltip>
 
         <Tooltip text="Table">
-          <button
+          <button aria-label="Table"
             type="button"
             onClick={() => onFormat('table')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -143,7 +144,7 @@ export function EditorToolbar({
         </Tooltip>
 
         <Tooltip text="Insert Link">
-          <button
+          <button aria-label="Insert Link"
             type="button"
             onClick={() => onFormat('link')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -153,7 +154,7 @@ export function EditorToolbar({
         </Tooltip>
 
         <Tooltip text="Insert Image">
-          <button
+          <button aria-label="Insert Image"
             type="button"
             onClick={() => onFormat('image')}
             className="p-1.5 rounded text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 transition-colors"
@@ -166,7 +167,7 @@ export function EditorToolbar({
 
         {/* Slide Separator */}
         <Tooltip text="New Slide Separator (---)">
-          <button
+          <button aria-label="New Slide Separator (---)"
             type="button"
             onClick={() => onFormat('slide-break')}
             className="flex items-center gap-1 px-2 py-1 rounded bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors text-xs font-semibold"
@@ -197,7 +198,7 @@ export function EditorToolbar({
           </select>
         </div>
       </div>
-    </div>
+    </fieldset>
   );
 }
 

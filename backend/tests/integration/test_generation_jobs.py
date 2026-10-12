@@ -122,7 +122,9 @@ async def test_job_create_lookup_worker_persistence_and_duplicate(client, sessio
     assert events[0] == "job.queued" and events[-1] == "job.completed"
     assert "job.started" in events and "slide.completed" in events
     assert any(
-        event["event"] == "prompt.analysis" and event["progress"] > 20
+        event["event"] == "prompt.analysis"
+        and event["progress"] == 20
+        and event["data"].get("received_characters", 0) > 0
         for event in queue.events
     )
     assert "slide.delta" not in events and "slide.started" not in events

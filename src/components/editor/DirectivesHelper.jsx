@@ -75,11 +75,12 @@ export function DirectivesHelper({ onInsertDirective }) {
   ];
 
   return (
-    <div className="relative inline-block" ref={dropdownRef}>
+    <div className="relative inline-block" ref={dropdownRef} onKeyDown={(event) => { if (event.key === 'Escape') { setIsOpen(false); dropdownRef.current?.querySelector('button')?.focus(); } }}>
       <Tooltip text="MARP Directives">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
+          aria-expanded={isOpen}
           className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
             isOpen ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           }`}

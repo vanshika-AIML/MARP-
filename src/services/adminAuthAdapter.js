@@ -1,19 +1,36 @@
 const rolePermissions = {
   'Super Admin': ['*'],
-  Admin: ['content:write', 'templates:write', 'themes:write', 'settings:write', 'activity:read'],
+  Admin: ['admin:read', 'content:write', 'templates:write', 'themes:write', 'settings:write', 'activity:read'],
   Editor: ['content:write', 'templates:write', 'themes:write'],
-  Viewer: ['admin:read'],
+  Viewer: [],
 };
 
+let portalUser = null;
+
+export function setPortalAuthSession(session) {
+  if (!session || typeof session.subject !== 'string') {
+    portalUser = null;
+    return;
+  }
+  const role = session.is_admin
+    ? 'Super Admin'
+    : session.is_editor
+      ? 'Editor'
+      : 'Viewer';
+  portalUser = { id: session.subject, name: session.subject, role, source: 'oidc-session' };
+}
+
 export function getPortalAdminUser() {
-  // Replace this adapter with the IEEE portal session provider at integration time.
-  const role = import.meta.env.VITE_MARP_ADMIN_ROLE || (import.meta.env.DEV ? 'Super Admin' : 'Viewer');
-  return { id: 'portal-adapter', name: 'Portal Admin', role, source: 'portal-adapter' };
+  if (portalUser) return portalUser;
+  if (import.meta.env.DEV) {
+    return { id: 'local-development', name: 'Local developer', role: 'Super Admin', source: 'loopback' };
+  }
+  return portalUser;
 }
 
 export function canAdmin(user, permission) {
   const permissions = rolePermissions[user?.role] || [];
-  return permissions.includes('*') || permissions.includes(permission) || permission === 'admin:read' && permissions.length > 0;
+  return permissions.includes('*') || permissions.includes(permission);
 }
 
 export function getAdminRolePermissions() {

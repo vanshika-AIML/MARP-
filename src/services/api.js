@@ -1,6 +1,12 @@
 /** Central transport. Components use services, never fetch directly. */
 const DEFAULT_BASE = import.meta.env.VITE_API_BASE_URL || window.location.origin;
 
+function readCookie(name) {
+  const prefix = `${encodeURIComponent(name)}=`;
+  const cookie = document.cookie.split(';').map((part) => part.trim()).find((part) => part.startsWith(prefix));
+  return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : '';
+}
+
 export class ApiError extends Error {
   constructor(message, { status = 0, code = 'network_error', details = null } = {}) {
     super(message); this.name = 'ApiError'; this.status = status; this.code = code; this.details = details;
@@ -23,8 +29,17 @@ export class ApiClient {
     const timer = setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
     const headers = new Headers(init.headers); headers.set('Accept', 'application/json');
     if (init.body != null && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json');
+    if (!['GET', 'HEAD', 'OPTIONS'].includes((init.method || 'GET').toUpperCase())) {
+      const csrfToken = readCookie('marp_csrf');
+      if (csrfToken) headers.set('X-CSRF-Token', csrfToken);
+    }
     try {
-      const response = await fetch(`${this.apiUrl}/${endpoint.replace(/^\//, '')}`, { ...init, headers, signal: controller.signal });
+      const response = await fetch(`${this.apiUrl}/${endpoint.replace(/^\//, '')}`, {
+        ...init,
+        headers,
+        credentials: init.credentials || 'same-origin',
+        signal: controller.signal,
+      });
       if (!response.ok) {
         const payload = await response.json().catch(() => null); const error = payload?.error; const detail = payload?.detail;
         throw new ApiError(error?.message || (typeof detail === 'string' ? detail : `Request failed (HTTP ${response.status}).`), { status: response.status, code: error?.code || 'http_error', details: error?.details || (Array.isArray(detail) ? detail : null) });

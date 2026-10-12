@@ -32,6 +32,15 @@ describe('ApiClient', () => {
     expect(fetchMock.mock.calls[0][1].headers.has('Content-Type')).toBe(false);
   });
 
+  it('adds the double-submit CSRF token to same-origin writes when present', async () => {
+    document.cookie = 'marp_csrf=csrf-value';
+    const fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await new ApiClient().post('/presentations', { title: 'Protected' });
+    expect(fetchMock.mock.calls[0][1].headers.get('X-CSRF-Token')).toBe('csrf-value');
+    document.cookie = 'marp_csrf=; Max-Age=0';
+  });
+
   it('distinguishes timeout from HTTP failure', async () => {
     vi.useFakeTimers();
     vi.stubGlobal('fetch', vi.fn((_url, options) => new Promise((_resolve, reject) => options.signal.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))))));

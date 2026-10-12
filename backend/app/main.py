@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.v1.router import router as api_router
+from app.core.auth import AuthenticationMiddleware, AuthVerifier
 from app.core.config import Settings
 from app.core.database import Database
 from app.core.errors import register_exception_handlers
@@ -67,12 +68,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         logger.info("MARP Studio API stopped")
 
     # Do not enable Starlette debug tracebacks: they bypass the safe error envelope.
-    application = FastAPI(title="MARP Studio API", version="0.1.0", lifespan=lifespan)
+    production = settings.app_env == "production"
+    application = FastAPI(
+        title="MARP Studio API",
+        version="0.1.0",
+        lifespan=lifespan,
+        docs_url=None if production else "/docs",
+        redoc_url=None if production else "/redoc",
+        openapi_url=None if production else "/openapi.json",
+    )
     application.state.settings = settings
+    application.state.auth_verifier = AuthVerifier(settings)
+    application.add_middleware(
+        AuthenticationMiddleware,
+        settings=settings,
+        verifier=application.state.auth_verifier,
+    )
     application.add_middleware(
         RequestSecurityMiddleware,
         max_bytes=max(settings.max_request_mb, settings.max_upload_mb + 1) * 1024 * 1024,
-        production=settings.app_env == "production",
+        production=production,
     )
     application.add_middleware(
         UploadSizeLimit,
@@ -84,7 +99,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_origins=settings.frontend_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
+        allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "X-Request-ID"],
     )
     application.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
     register_exception_handlers(application)

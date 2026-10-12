@@ -2,7 +2,7 @@
  * Main App Component
  * Serves as the primary application root and standalone/embeddable entry point.
  */
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import Providers from './Providers';
 import Dashboard from '../pages/Dashboard';
@@ -11,7 +11,8 @@ import { PresentationLoading } from '../components/ui/ContentLoaders';
 import EditorPage from '../pages/EditorPage';
 import usePresentation from '../hooks/usePresentation';
 import MarpAdminPage from '../pages/MarpAdminPage';
-import { canAdmin, getPortalAdminUser } from '../services/adminAuthAdapter';
+import { canAdmin, getPortalAdminUser, setPortalAuthSession } from '../services/adminAuthAdapter';
+import api from '../services/api';
 
 function PresentationRoute({ previewRoute = false }) {
   const { presentationId } = useParams();
@@ -47,6 +48,23 @@ function PresentationRoute({ previewRoute = false }) {
 function AppContent() {
   const { createNewPresentation } = usePresentation();
   const navigate = useNavigate();
+  const [portalUserLoaded, setPortalUserLoaded] = useState(import.meta.env.DEV);
+  useEffect(() => {
+    if (import.meta.env.DEV) return undefined;
+    let active = true;
+    api.get('/auth/me')
+      .then((session) => {
+        if (!active) return;
+        setPortalAuthSession(session);
+        setPortalUserLoaded(true);
+      })
+      .catch(() => {
+        if (!active) return;
+        setPortalAuthSession(null);
+        setPortalUserLoaded(true);
+      });
+    return () => { active = false; };
+  }, []);
   const adminUser = getPortalAdminUser();
 
   const handleOpenDeck = (deckId) => navigate(`/editor/${encodeURIComponent(deckId)}`);
@@ -68,7 +86,7 @@ function AppContent() {
       <Route path="/dashboard" element={<Dashboard onOpenDeck={handleOpenDeck} onNewDeckWithTemplate={handleNewDeckWithTemplate} />} />
       <Route path="/editor/:presentationId" element={<PresentationRoute />} />
       <Route path="/preview/:presentationId" element={<PresentationRoute previewRoute />} />
-      <Route path="/admin/marp" element={canAdmin(adminUser, 'admin:read') ? <MarpAdminPage /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/admin/marp" element={!portalUserLoaded ? <PresentationLoading /> : canAdmin(adminUser, 'admin:read') ? <MarpAdminPage /> : <Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

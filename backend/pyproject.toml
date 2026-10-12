@@ -22,6 +22,7 @@ dependencies = [
     "pillow>=12,<13",
     "defusedxml>=0.7.1,<1",
     "python-multipart>=0.0.20,<1",
+    "PyJWT[crypto]>=2.10,<3",
 ]
 
 [dependency-groups]

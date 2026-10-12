@@ -32,6 +32,14 @@ class Settings(BaseSettings):
         default_factory=lambda: ["http://localhost:5173", "http://localhost:5176"],
         validation_alias=AliasChoices("CORS_ORIGINS", "FRONTEND_ORIGINS"),
     )
+    auth_jwks_url: str = ""
+    auth_issuer: str = ""
+    auth_audience: str = ""
+    auth_roles_claim: str = Field(default="roles", min_length=1, max_length=100)
+    auth_admin_role: str = Field(default="marp_admin", min_length=1, max_length=100)
+    auth_editor_role: str = Field(default="marp_editor", min_length=1, max_length=100)
+    auth_max_token_lifetime_seconds: int = Field(default=3600, ge=60, le=86400)
+    auth_jwt_secret: SecretStr = SecretStr("")
     trusted_hosts: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: ["localhost", "127.0.0.1", "testserver", "test"]
     )
@@ -116,6 +124,28 @@ class Settings(BaseSettings):
             raise ValueError("NVIDIA_BASE_URL must be an HTTP(S) URL without credentials or query")
         return value.rstrip("/")
 
+    @field_validator("auth_jwks_url")
+    @classmethod
+    def validate_auth_jwks_url(cls, value: str) -> str:
+        if not value:
+            return value
+        try:
+            url = urlsplit(value)
+            valid = (
+                url.scheme == "https"
+                and bool(url.hostname)
+                and not url.username
+                and not url.password
+                and not url.query
+                and not url.fragment
+            )
+            _ = url.port
+        except ValueError:
+            valid = False
+        if not valid:
+            raise ValueError("AUTH_JWKS_URL must be HTTPS without credentials or query")
+        return value
+
     @field_validator("frontend_origins", "trusted_hosts", mode="before")
     @classmethod
     def parse_origins(cls, value: object) -> object:
@@ -178,3 +208,24 @@ class Settings(BaseSettings):
         ):
             raise ValueError("Production TRUSTED_HOSTS must be explicit deployed hosts")
         return self
+
+    @model_validator(mode="after")
+    def validate_authentication(self):
+        secret = self.auth_jwt_secret.get_secret_value()
+        if secret and len(secret) < 32:
+            raise ValueError("AUTH_JWT_SECRET must contain at least 32 characters")
+        if self.auth_jwks_url and secret:
+            raise ValueError("Configure either AUTH_JWKS_URL or AUTH_JWT_SECRET, not both")
+        if (self.auth_jwks_url or secret) and not (self.auth_issuer and self.auth_audience):
+            raise ValueError("AUTH_ISSUER and AUTH_AUDIENCE are required for JWT authentication")
+        if self.app_env == "production" and secret:
+            raise ValueError("Production authentication must use AUTH_JWKS_URL")
+        return self
+
+    @property
+    def auth_configured(self) -> bool:
+        claims_configured = bool(self.auth_issuer and self.auth_audience)
+        jwks_configured = bool(self.auth_jwks_url and claims_configured)
+        secret = self.auth_jwt_secret.get_secret_value()
+        secret_configured = bool(secret and len(secret) >= 32 and claims_configured)
+        return jwks_configured or secret_configured

@@ -34,7 +34,7 @@ export default function UploadTemplate() {
     setProcessing(true); setError('');
     try {
       await configService.createTemplate({ name: template.title.trim(), description: 'Uploaded MARP template', category: 'custom', theme_id: config.themes.find((theme) => theme.id === template.theme)?.backendId || null, starter_markdown: template.markdown, tags: ['custom'], is_active: true });
-      await reload(); setSaved(true);
+      await reload({ throwOnError: true }); setSaved(true);
     } catch (reason) { setError(reason.message || 'The template could not be saved.'); }
     finally { setProcessing(false); }
   };

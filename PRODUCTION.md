@@ -2,7 +2,12 @@
 
 ## Local development (PowerShell)
 
-Prerequisites: Python 3.12, uv, Node.js 22+, Docker Desktop.
+Prerequisites: Python 3.12, uv, Node.js 22.12+ (or 24+), Docker Desktop.
+
+On Windows, after `uv sync --project backend` and creating `backend/.env`,
+`npm run dev:all` runs the full local stack, including migrations and starter data.
+It uses the database/Redis ports in `backend/.env` for Docker port mappings.
+For machines where 5432 is reserved, use 55432 in `DATABASE_URL`.
 
 ```powershell
 Copy-Item backend/.env.example backend/.env

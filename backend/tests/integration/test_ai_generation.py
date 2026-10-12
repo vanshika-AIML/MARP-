@@ -104,6 +104,19 @@ async def test_full_generation_persists_canonical_and_structured(client, provide
     assert "Output JSON schema" in provider["calls"][0]["messages"][1]["content"]
 
 
+async def test_full_generation_ignores_unknown_model_slide_fields(client, provider):
+    output = deck("One")
+    output["slides"][0]["subtitle"] = "A supporting line"
+    output["slides"][0]["author"] = "Model-added metadata"
+
+    result = await generate(
+        client, provider, "generate_full_deck", output, options={"slide_count": 1}
+    )
+
+    assert result["presentation"]["slides"][0]["title"] == "One"
+    assert "Content for One" in result["markdown"]
+
+
 @pytest.mark.parametrize("action", ["generate_outline", "generate_single_slide"])
 async def test_preview_generation(client, provider, sessions, action):
     result = await generate(client, provider, action, deck("Plan"), options={"slide_count": 1})

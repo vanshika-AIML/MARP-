@@ -4,6 +4,16 @@ import { ApiClient, ApiError } from './api';
 afterEach(() => vi.unstubAllGlobals());
 
 describe('ApiClient', () => {
+  it('supports same-origin API and WebSocket configuration', () => {
+    const client = new ApiClient('/api/v1');
+    expect(client.apiUrl).toBe(`${window.location.origin}/api/v1`);
+    expect(client.wsUrl('/ws/jobs/one')).toMatch(/^ws:\/\/.*\/api\/v1\/ws\/jobs\/one$/);
+  });
+
+  it('explains misrouted HTML responses', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>Vite fallback</html>')));
+    await expect(new ApiClient('/').get('/presentations')).rejects.toMatchObject({ code: 'invalid_response' });
+  });
   it('normalizes the API prefix and decodes JSON', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'content-type': 'application/json' } }));
     vi.stubGlobal('fetch', fetchMock);

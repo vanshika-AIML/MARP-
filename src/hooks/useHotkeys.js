@@ -24,14 +24,14 @@ export function useHotkeys({
       const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
 
       // Ctrl + S: Save
-      if (cmdOrCtrl && e.key.toLowerCase() === 's') {
+      if (onSave && cmdOrCtrl && e.key.toLowerCase() === 's') {
         e.preventDefault();
         if (onSave) onSave();
         return;
       }
 
       // Ctrl + Enter: Present
-      if (cmdOrCtrl && e.key === 'Enter') {
+      if (onPresent && cmdOrCtrl && e.key === 'Enter') {
         e.preventDefault();
         if (onPresent) onPresent();
         return;
@@ -44,13 +44,13 @@ export function useHotkeys({
       }
 
       // Slide navigation (when target is body or presentation overlay)
-      const isInputFocused = ['INPUT', 'TEXTAREA'].includes(e.target.tagName) || e.target.classList.contains('cm-content');
+      const isInputFocused = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(e.target.tagName) || e.target.closest('[contenteditable="true"], .cm-content');
 
       if (!isInputFocused) {
-        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        if (onNextSlide && (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ')) {
           e.preventDefault();
           if (onNextSlide) onNextSlide();
-        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        } else if (onPrevSlide && (e.key === 'ArrowLeft' || e.key === 'PageUp')) {
           e.preventDefault();
           if (onPrevSlide) onPrevSlide();
         }

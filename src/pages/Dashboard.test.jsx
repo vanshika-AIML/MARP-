@@ -24,6 +24,25 @@ afterEach(() => { cleanup(); vi.clearAllMocks(); vi.unstubAllGlobals(); });
 const mount = (props = {}) => render(<MemoryRouter><ThemeProvider><Dashboard onOpenDeck={vi.fn()} onNewDeckWithTemplate={vi.fn()} {...props} /></ThemeProvider></MemoryRouter>);
 
 describe('Dashboard workspace', () => {
+  it('navigates End using only visible sections', async () => {
+    presentationService.listPresentations.mockResolvedValue([]);
+    config.featureFlags.uploadTemplate = false;
+    try {
+      mount();
+      const home = await screen.findByRole('tab', { name: 'Home' });
+      fireEvent.keyDown(home, { key: 'End' });
+      expect(screen.getByRole('tab', { name: 'Create with AI' })).toHaveAttribute('aria-selected', 'true');
+    } finally { config.featureFlags.uploadTemplate = true; }
+  });
+
+  it('honors the configured initial section', async () => {
+    presentationService.listPresentations.mockResolvedValue([]);
+    config.dashboard.defaultSection = 'ai';
+    try {
+      mount();
+      expect(await screen.findByRole('tab', { name: 'Create with AI' })).toHaveAttribute('aria-selected', 'true');
+    } finally { config.dashboard.defaultSection = 'home'; }
+  });
   it('loads, opens, and deletes persisted presentations', async () => {
     const deck = { id: 'deck-1', title: 'Persistent deck', markdown: '# Slide', theme: 'minimal' };
     presentationService.listPresentations.mockResolvedValue([deck]);

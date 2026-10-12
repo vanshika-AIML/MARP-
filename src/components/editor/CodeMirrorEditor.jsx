@@ -14,6 +14,7 @@ export function CodeMirrorEditor({
   onEditorReady,
   onEditorUpdate,
   className = '',
+  readOnly = false,
 }) {
   const handleEditorCreate = useCallback((view) => {
     if (onEditorReady) {
@@ -25,6 +26,8 @@ export function CodeMirrorEditor({
     <div className={`w-full h-full relative overflow-hidden text-left ${className}`}>
       <CodeMirror
         value={value}
+        readOnly={readOnly}
+        editable={!readOnly}
         height="100%"
         theme={githubLight}
         extensions={[markdown()]}

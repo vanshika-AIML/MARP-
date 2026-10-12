@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import agentService from './agentService';
 import { subscribeResource } from './realtimeService';
 import { generatePresentation } from './generationService';
@@ -8,8 +8,19 @@ vi.mock('./agentService', () => ({
   default: { createJob: vi.fn(), getJob: vi.fn(), cancelJob: vi.fn() },
 }));
 vi.mock('./realtimeService', () => ({ subscribeResource: vi.fn() }));
+afterEach(() => { vi.useRealTimers(); vi.clearAllMocks(); });
 
 describe('generatePresentation', () => {
+  it('keeps watching through REST when WebSockets are exhausted mid-job', async () => {
+    vi.useFakeTimers();
+    agentService.createJob.mockResolvedValue({ job_id: 'job-poll' });
+    agentService.getJob.mockResolvedValueOnce({ status: 'running' }).mockResolvedValueOnce({ status: 'completed', result: { markdown: '# Done' } });
+    subscribeResource.mockImplementation((_path, handlers) => { queueMicrotask(handlers.onExhausted); return vi.fn(); });
+    const done = generatePresentation('topic', 'deck');
+    await vi.advanceTimersByTimeAsync(2100);
+    await expect(done).resolves.toEqual({ markdown: '# Done' });
+    expect(agentService.getJob).toHaveBeenCalledTimes(2);
+  });
   it('creates a job and resolves its durable completed result', async () => {
     const result = { action: 'generate_full_deck', markdown: '# Real deck', presentation_id: 'deck-1', persisted: true };
     agentService.createJob.mockResolvedValue({ job_id: 'job-1', status: 'queued' });

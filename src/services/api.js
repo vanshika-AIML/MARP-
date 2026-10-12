@@ -9,7 +9,7 @@ export class ApiError extends Error {
 }
 export class ApiClient {
   constructor(baseUrl = DEFAULT_BASE) { this.setBaseUrl(baseUrl); this.timeoutMs = 15000; }
-  setBaseUrl(baseUrl) { this.baseUrl = baseUrl.replace(/\/+$/, '').replace(/\/api\/v1$/, ''); this.apiUrl = `${this.baseUrl}/api/v1`; }
+  setBaseUrl(baseUrl) { this.baseUrl = new URL(baseUrl || '/', window.location.origin).href.replace(/\/+$/, '').replace(/\/api\/v1$/, ''); this.apiUrl = `${this.baseUrl}/api/v1`; }
   wsUrl(path) {
     const configured = import.meta.env.VITE_WS_BASE_URL?.replace(/\/+$/, '').replace(/\/api\/v1$/, '');
     if (configured) return `${configured}/api/v1${path}`;
@@ -32,7 +32,8 @@ export class ApiClient {
       if (response.status === 204) return undefined;
       if (responseType === 'blob') return await response.blob();
       if (responseType === 'text') return await response.text();
-      return await response.json();
+      try { return await response.json(); }
+      catch { throw new ApiError('The server did not return valid API data. Check that the backend is running and /api/v1 is routed to it.', { code: 'invalid_response' }); }
     } catch (error) {
       if (timedOut) throw new ApiError(`Request timed out after ${timeoutMs / 1000} seconds. Please retry.`, { code: 'timeout' });
       if (signal?.aborted || error.name === 'AbortError') throw new DOMException('Request cancelled.', 'AbortError');

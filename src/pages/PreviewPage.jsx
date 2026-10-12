@@ -27,6 +27,15 @@ export function PreviewPage({
     setCurrentIdx(activeSlide);
   }, [activeSlide]);
 
+  useEffect(() => {
+    const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    return () => {
+      document.removeEventListener('fullscreenchange', syncFullscreen);
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    };
+  }, []);
+
   const handleNext = () => {
     if (currentIdx < slides.length - 1) {
       const next = currentIdx + 1;
@@ -45,8 +54,7 @@ export function PreviewPage({
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsFullscreen(true);
+      document.documentElement.requestFullscreen?.().catch(() => {});
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen().catch(() => {});
@@ -126,6 +134,7 @@ export function PreviewPage({
             <button
               key={i}
               type="button"
+              aria-label={`Go to slide ${i + 1}`}
               onClick={() => {
                 setCurrentIdx(i);
                 if (onSlideChange) onSlideChange(i);

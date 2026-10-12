@@ -27,6 +27,7 @@ const initialState = {
   previewStatus: { ...INITIAL_PREVIEW_STATUS },
   isLoading: false,
   isSaving: false,
+  saveError: null,
   error: null,
   lastSavedAt: new Date().toISOString(),
   editRevision: 0,
@@ -47,6 +48,8 @@ function presentationReducer(state, action) {
         slides: parsed.slides,
         activeSlide: 0,
         isLoading: false,
+        isSaving: false,
+        saveError: null,
         error: null,
         lastSavedAt: presentation.updatedAt || presentation.updated_at || new Date().toISOString(),
         editRevision: 0,
@@ -88,12 +91,13 @@ function presentationReducer(state, action) {
     case PRESENTATION_ACTIONS.SET_THEME: {
       const { theme } = action.payload;
       // Update theme inside markdown frontmatter if exists, or prepend
-      let updatedMarkdown = state.markdown;
-      if (updatedMarkdown.includes('theme:')) {
-        updatedMarkdown = updatedMarkdown.replace(/theme:\s*[a-zA-Z0-9_-]+/g, `theme: ${theme}`);
-      } else {
-        updatedMarkdown = `---\nmarp: true\ntheme: ${theme}\npaginate: true\n---\n\n${updatedMarkdown}`;
-      }
+      const { frontmatter, body } = splitFrontmatter(state.markdown);
+      const updatedFrontmatter = frontmatter
+        ? (/^theme\s*:/m.test(frontmatter)
+          ? frontmatter.replace(/^theme\s*:.*$/m, `theme: ${theme}`)
+          : frontmatter.replace(/\r?\n---\s*$/, `\ntheme: ${theme}\n---`))
+        : `---\nmarp: true\ntheme: ${theme}\npaginate: true\n---`;
+      const updatedMarkdown = `${updatedFrontmatter}\n${body}`;
       const parsed = parseMarpPresentation(updatedMarkdown);
       return {
         ...state,
@@ -136,6 +140,7 @@ function presentationReducer(state, action) {
       return {
         ...state,
         isSaving: action.payload.isSaving,
+        saveError: action.payload.error || null,
         lastSavedAt: action.payload.lastSavedAt || state.lastSavedAt,
       };
     }
@@ -147,6 +152,7 @@ function presentationReducer(state, action) {
       return {
         ...state,
         isSaving: false,
+        saveError: null,
         savedRevision: action.payload.revision,
         lastSavedAt: action.payload.lastSavedAt,
       };
@@ -170,36 +176,54 @@ export function PresentationProvider({ children, initialData = null }) {
 
   const saveTimeoutRef = useRef(null);
   const saveQueueRef = useRef(Promise.resolve());
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const loadRequestRef = useRef(0);
+
+  const persist = useCallback((snapshot) => {
+    const { id, editRevision: revision, title, markdown } = snapshot;
+    dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: true, id, revision } });
+    const task = saveQueueRef.current.catch(() => undefined).then(async () => {
+      try {
+        await presentationService.updatePresentation(id, { title, markdown });
+        dispatch({ type: PRESENTATION_ACTIONS.MARK_SAVED, payload: { id, revision, lastSavedAt: new Date().toISOString() } });
+      } catch (err) {
+        dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: false, id, revision, error: err.message } });
+        throw err;
+      }
+    });
+    saveQueueRef.current = task;
+    return task;
+  }, []);
+
+  const savePresentation = useCallback(async () => {
+    clearTimeout(saveTimeoutRef.current);
+    const snapshot = stateRef.current;
+    if (!snapshot.id) return;
+    if (snapshot.editRevision !== snapshot.savedRevision) await persist(snapshot);
+    else await saveQueueRef.current;
+  }, [persist]);
 
   // Auto-save only revisions caused by user edits.
   useEffect(() => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     if (!state.id || state.editRevision === state.savedRevision) return undefined;
 
-    const revision = state.editRevision;
-    const presentationId = state.id;
-    const data = { title: state.title, markdown: state.markdown };
-
-    saveTimeoutRef.current = setTimeout(async () => {
-      dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: true, id: presentationId, revision } });
-      saveQueueRef.current = saveQueueRef.current.catch(() => undefined).then(async () => {
-        try {
-          await presentationService.updatePresentation(presentationId, data);
-          dispatch({
-            type: PRESENTATION_ACTIONS.MARK_SAVED,
-            payload: { id: presentationId, revision, lastSavedAt: new Date().toISOString() },
-          });
-        } catch (err) {
-          console.warn('Auto-save warning:', err);
-          dispatch({ type: PRESENTATION_ACTIONS.SET_SAVING, payload: { isSaving: false, id: presentationId, revision } });
-        }
-      });
-    }, 1200);
+    saveTimeoutRef.current = setTimeout(() => { persist(stateRef.current).catch(() => {}); }, 1200);
 
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [state.markdown, state.title, state.theme, state.id, state.editRevision, state.savedRevision]);
+  }, [state.markdown, state.title, state.theme, state.id, state.editRevision, state.savedRevision, persist]);
+
+  useEffect(() => {
+    const warnIfUnsaved = (event) => {
+      if (stateRef.current.editRevision === stateRef.current.savedRevision) return;
+      event.preventDefault(); event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnIfUnsaved);
+    return () => window.removeEventListener('beforeunload', warnIfUnsaved);
+  }, []);
 
   const updateMarkdown = useCallback((markdown) => {
     dispatch({ type: PRESENTATION_ACTIONS.UPDATE_MARKDOWN, payload: { markdown } });
@@ -226,11 +250,14 @@ export function PresentationProvider({ children, initialData = null }) {
   }, []);
 
   const loadPresentation = useCallback(async (id) => {
+    const request = ++loadRequestRef.current;
     dispatch({ type: PRESENTATION_ACTIONS.SET_LOADING, payload: true });
     try {
       const presentation = await presentationService.getPresentation(id);
+      if (request !== loadRequestRef.current) return;
       dispatch({ type: PRESENTATION_ACTIONS.SET_PRESENTATION, payload: { presentation } });
     } catch (err) {
+      if (request !== loadRequestRef.current) return;
       dispatch({ type: PRESENTATION_ACTIONS.SET_ERROR, payload: err.message });
     }
   }, []);
@@ -255,8 +282,8 @@ export function PresentationProvider({ children, initialData = null }) {
       dispatch({ type: PRESENTATION_ACTIONS.SET_PRESENTATION, payload: { presentation: created } });
       return created;
     } catch (err) {
-      dispatch({ type: PRESENTATION_ACTIONS.SET_ERROR, payload: err.message });
-      return null;
+      dispatch({ type: PRESENTATION_ACTIONS.SET_LOADING, payload: false });
+      throw err;
     }
   }, []);
 
@@ -298,6 +325,7 @@ export function PresentationProvider({ children, initialData = null }) {
     setGenerationStatus,
     setPreviewStatus,
     loadPresentation,
+    savePresentation,
     createNewPresentation,
     addSlide,
     deleteSlide,

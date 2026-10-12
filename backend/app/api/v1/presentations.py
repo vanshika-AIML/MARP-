@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Response
+from starlette.concurrency import run_in_threadpool
 
 from app.api.v1.dependencies import ContentRoute, Pagination, ResourceID, Service, changes
 from app.models import Presentation
 from app.schemas.content import (
     PresentationCreate,
+    PresentationExport,
     PresentationListItem,
     PresentationRead,
     PresentationUpdate,
@@ -15,6 +17,21 @@ from app.schemas.content import (
 )
 
 router = APIRouter(tags=["presentations"], route_class=ContentRoute)
+
+
+@router.post("/presentations/{id}/export/pptx")
+async def export_presentation(id: ResourceID, payload: PresentationExport, service: Service):
+    from app.services.pptx_export import export_pptx
+
+    presentation = await service.require(Presentation, id)
+    markdown = payload.markdown if payload.markdown is not None else presentation.markdown
+    service.parse(markdown)
+    content = await run_in_threadpool(export_pptx, payload.title or presentation.title, markdown)
+    return Response(
+        content,
+        media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        headers={"Content-Disposition": 'attachment; filename="presentation.pptx"'},
+    )
 
 
 @router.get("/presentations", response_model=list[PresentationListItem])

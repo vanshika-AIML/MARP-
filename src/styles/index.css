@@ -7,6 +7,17 @@
 @tailwind components;
 @tailwind utilities;
 
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .01ms !important;
+  scroll-behavior: auto !important;
+}
+html[data-ambient-intensity="minimal"] :is(.hero-ambient, .ai-ambient-geometry, .tour-ambient-geometry) { opacity: .25; }
+html[data-ambient-intensity="dynamic"] :is(.hero-ambient, .ai-ambient-geometry, .tour-ambient-geometry) { opacity: 1; }
+
 @layer base {
   :root {
     color-scheme: light;

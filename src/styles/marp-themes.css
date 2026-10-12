@@ -80,6 +80,13 @@
 .marp-theme-bold { --slide-heading-weight: 850; --slide-title-size: 3.8em; --slide-tracking: -.06em; }.marp-theme-bold::before { width: 26%; background: #be123c0b; transform: skewX(-15deg); right: -18%; }.marp-theme-bold::after { width: 10%; height: 1cqw; background: #f59e0b; }.marp-theme-bold h1 { text-transform: uppercase; max-width: 17ch; }.marp-theme-bold blockquote { font-weight: 800; }.marp-theme-bold th { background: #be123c; color: white; }.marp-theme-bold img { border-radius: 0; box-shadow: .5em .5em #be123c; }
 .marp-theme-gradient { --slide-title-size: 3.5em; --slide-heading-weight: 650; background-image: linear-gradient(135deg, #eff6ff 20%, #ede9fe 65%, #fce7f3); }.marp-theme-gradient::before { width: 32%; height: 57%; right: -16%; top: -24%; border-radius: 50%; background: linear-gradient(135deg, #4f46e525, #0891b220); }.marp-theme-gradient::after { width: 18%; height: .4cqw; background: linear-gradient(90deg, #4f46e5, #db2777, #0891b2); }.marp-theme-gradient pre { background: #ffffff90; }.marp-theme-gradient img { border-radius: 1em; }
 /* Directives remain authoritative over automatic compositions. */
+.marp-slide-wrapper img.marp-bg { position: absolute; inset: 0; width: 100%; height: 100%; max-height: none; margin: 0; object-fit: cover; border-radius: 0; z-index: -1; }
+.marp-slide-wrapper img.marp-bg-right { left: auto; }
+.marp-slide-wrapper img.marp-bg-left { right: auto; }
+.marp-slide-content:has(.marp-bg-right) { padding-right: 53%; }
+.marp-slide-content:has(.marp-bg-left) { padding-left: 53%; }
+.marp-slide-wrapper.visual-full-bleed { --theme-primary: #fff !important; --theme-secondary: #fff !important; --theme-text: #fff !important; text-shadow: 0 2px 8px #000b; }
+.marp-slide-wrapper.visual-framed img { border: 1px solid currentColor; padding: .3em; box-shadow: 0 .4em 1em #0002; }
 .marp-slide-wrapper.slide-lead .marp-slide-content { justify-content: center; align-items: center; text-align: center; padding-inline: 8%; }
 .marp-slide-wrapper.slide-invert { background-color: #102033 !important; background-image: none; color: #f8fafc; --theme-text: #f8fafc !important; --theme-primary: #f8fafc !important; --theme-secondary: #dbeafe !important; --theme-muted: #cbd5e1 !important; --theme-surface: #172b42 !important; }
 @media (prefers-reduced-motion: reduce) { .marp-slide-wrapper { animation: none !important; transition: none !important; } }

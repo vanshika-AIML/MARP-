@@ -84,7 +84,14 @@ async def test_real_queue_worker_http_and_websocket(
         if outcome == "failed":
             return httpx.Response(401, text="private provider details")
         data = {"title": "Runtime", "slides": [{"title": "Done", "content": ["A clear point"]}]}
-        return httpx.Response(200, json={"choices": [{"message": {"content": json.dumps(data)}}]})
+        content = json.dumps(data)
+        events = [
+            "data: "
+            + json.dumps({"choices": [{"delta": {"content": content[start : start + 128]}}]})
+            + "\n\n"
+            for start in range(0, len(content), 128)
+        ]
+        return httpx.Response(200, text="".join(events) + "data: [DONE]\n\n")
 
     nim = NvidiaNIMClient(
         settings.model_copy(update={"nvidia_api_key": SecretStr("mock-only"), "ai_max_retries": 0}),

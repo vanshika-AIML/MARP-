@@ -22,16 +22,19 @@ import {
 import Tooltip from '../ui/Tooltip';
 import DirectivesHelper from './DirectivesHelper';
 import { THEME_REGISTRY } from '../../utils/themeRegistry';
+import { useMarpConfig } from '../../context/MarpConfigContext';
 
 export function EditorToolbar({
   onFormat,
   currentTheme = 'default',
   onChangeTheme,
 }) {
+  const { config } = useMarpConfig();
+  const themes = [...new Map([...THEME_REGISTRY, ...config.themes].map((theme) => [theme.id, theme])).values()].filter((theme) => theme.active !== false);
   return (
     <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-50 border-b border-slate-200/80 select-none overflow-x-auto">
       {/* Left Formatting Group */}
-      <div className="flex items-center gap-0.5">
+      {onFormat && <div className="flex items-center gap-0.5">
         {/* Headings */}
         <Tooltip text="Heading 1" shortcut="# ">
           <button
@@ -175,18 +178,20 @@ export function EditorToolbar({
 
         {/* Directives Helper Menu */}
         <DirectivesHelper onInsertDirective={onFormat} />
-      </div>
+      </div>}
 
       {/* Right: Theme Selector */}
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-md border border-slate-200 shadow-2xs">
           <Palette className="w-3.5 h-3.5 text-slate-400" />
           <select
+            aria-label="Presentation theme"
+            disabled={!config.featureFlags.customThemes}
             value={currentTheme}
             onChange={(e) => onChangeTheme && onChangeTheme(e.target.value)}
             className="text-xs bg-transparent text-slate-700 font-medium cursor-pointer focus:outline-none"
           >
-            {THEME_REGISTRY.map((theme) => (
+            {themes.map((theme) => (
               <option key={theme.id} value={theme.id}>{theme.name}</option>
             ))}
           </select>

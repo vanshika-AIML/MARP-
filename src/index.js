@@ -9,7 +9,7 @@ export { Providers } from './app/Providers';
 export { APP_ROUTES } from './app/routes';
 
 // Pages
-export { Dashboard } from './pages/Dashboard';
+export { default as Dashboard } from './pages/Dashboard';
 export { EditorPage } from './pages/EditorPage';
 export { PreviewPage } from './pages/PreviewPage';
 

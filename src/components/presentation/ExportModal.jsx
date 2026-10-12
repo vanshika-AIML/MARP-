@@ -63,7 +63,7 @@ export function ExportModal({
     {
       id: 'html',
       title: 'HTML Presentation',
-      description: 'Self-contained standalone HTML presentation with themes.',
+      description: 'Standalone HTML with slide styling. Linked images need network access.',
       icon: FileCode,
     },
     {
@@ -81,7 +81,7 @@ export function ExportModal({
     {
       id: 'pptx',
       title: 'PowerPoint (.pptx)',
-      description: 'Converts deck via backend presentationService for PowerPoint.',
+      description: 'Editable text slides with Markdown in notes. Use HTML/PDF for visual styling and images.',
       icon: Presentation,
     },
   ];

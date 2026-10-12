@@ -10,7 +10,7 @@ def test_local_defaults_and_reserved_nvidia_configuration():
     assert settings.api_v1_prefix == "/api/v1"
     assert settings.frontend_origins == ["http://localhost:5173", "http://localhost:5176"]
     assert settings.nvidia_api_key.get_secret_value() == ""
-    assert settings.nvidia_model == "nvidia/nemotron-3-nano-30b-a3b"
+    assert settings.nvidia_model == "nvidia/nemotron-3-super-120b-a12b"
 
 
 def test_env_file_and_environment_precedence(tmp_path, monkeypatch):

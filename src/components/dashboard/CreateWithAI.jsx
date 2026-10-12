@@ -9,17 +9,19 @@ import SourcePicker from '../presentation/SourcePicker';
 export default function CreateWithAI({ onCreate }) {
   const [sectionRef, visible] = useInView();
   const [prompt, setPrompt] = useState('');
+  const [error, setError] = useState('');
   const generation = useGeneration();
   const sources = useSources();
 
   const submit = async (event) => {
     event.preventDefault();
     if (!prompt.trim() || generation.pending || sources.blocked) return;
+    setError('');
     try {
       const result = await generation.run(prompt.trim(), 'deck', { source_ids: sources.readyIds, options: { persist: true } });
       if (!result.presentation_id) throw new Error('Generation completed without a saved presentation.');
       await onCreate({ presentationId: result.presentation_id });
-    } catch { /* error is rendered from the shared generation state */ }
+    } catch (reason) { setError(reason.message); }
   };
 
   return <section ref={sectionRef} className={`ai-create ${visible ? 'is-visible' : ''}`} aria-labelledby="ai-create-heading">
@@ -35,7 +37,7 @@ export default function CreateWithAI({ onCreate }) {
         <SourcePicker controller={sources} compact />
         <button className="primary-cta" disabled={!prompt.trim() || sources.blocked} type="submit"><PanelsTopLeft size={17} /> Generate presentation</button>
       </>}
-      {generation.error && <p role="alert" className="ui-error">{generation.error}</p>}
+      {(error || generation.error) && <p role="alert" className="ui-error">{error || generation.error}</p>}
     </form>
   </section>;
 }

@@ -42,11 +42,11 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     nvidia_api_key: SecretStr = SecretStr("")
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
-    nvidia_model: str = "nvidia/nemotron-3-nano-30b-a3b"
+    nvidia_model: str = "nvidia/nemotron-3-super-120b-a12b"
     nvidia_json_mode: bool = False
     ai_temperature: float = Field(default=0.5, ge=0, le=1)
     ai_max_tokens: int = Field(default=8192, ge=256, le=32768)
-    ai_timeout_seconds: float = Field(default=90, gt=0, le=300)
+    ai_timeout_seconds: float = Field(default=180, gt=0, le=300)
     ai_max_retries: int = Field(default=2, ge=0, le=5)
     ai_default_slide_count: int = Field(default=10, ge=1, le=40)
     ai_default_tone: str = Field(default="professional", min_length=1, max_length=50)

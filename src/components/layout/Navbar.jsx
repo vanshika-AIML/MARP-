@@ -23,6 +23,8 @@ export function Navbar({
   title = 'Untitled Presentation',
   onTitleChange,
   isSaving = false,
+  isDirty = false,
+  saveError = null,
   viewMode = 'split',
   onViewModeChange,
   onOpenAiModal,
@@ -84,6 +86,7 @@ export function Navbar({
             {isEditingTitle ? (
               <input
                 type="text"
+                maxLength={200}
                 value={tempTitle}
                 onChange={(e) => setTempTitle(e.target.value)}
                 onBlur={handleTitleSubmit}
@@ -112,7 +115,7 @@ export function Navbar({
                   <span className="save-pulse" aria-hidden="true" />
                   <span>Saving...</span>
                 </>
-              ) : (
+              ) : saveError ? <span className="text-rose-600">Save failed</span> : isDirty ? <span>Unsaved changes</span> : (
                 <>
                   <Check className="w-3 h-3 text-emerald-500" />
                   <span>Saved</span>

@@ -79,6 +79,36 @@ class GenerationService:
         if self.observer:
             await self.observer.progress(name, progress, data)
 
+    async def _complete(self, messages, parameters, temperature):
+        if self.observer is None:
+            return await self.client.complete(
+                messages,
+                temperature=temperature,
+                max_tokens=parameters.max_tokens,
+                timeout_seconds=parameters.timeout_seconds,
+            )
+
+        chunks = []
+        received_characters = 0
+        reported_progress = 20
+        async for chunk in self.client.stream(
+            messages,
+            temperature=temperature,
+            max_tokens=parameters.max_tokens,
+            total_timeout_seconds=parameters.timeout_seconds,
+            enable_thinking=False,
+        ):
+            chunks.append(chunk)
+            received_characters += len(chunk)
+            progress = min(
+                60,
+                max(21, 20 + received_characters * 40 // (parameters.max_tokens * 4)),
+            )
+            if progress > reported_progress:
+                await self._progress("prompt.analysis", progress)
+                reported_progress = progress
+        return "".join(chunks)
+
     async def _parameters(self, request):
         values = {
             "temperature": self.settings.ai_temperature,
@@ -240,14 +270,13 @@ class GenerationService:
                 "outline.started" if request.action == "generate_outline" else "prompt.analysis",
                 20,
             )
-            raw = await self.client.complete(
+            raw = await self._complete(
                 messages,
-                temperature=parameters.temperature if attempt == 0 else 0,
-                max_tokens=parameters.max_tokens,
-                timeout_seconds=parameters.timeout_seconds,
+                parameters,
+                parameters.temperature if attempt == 0 else 0,
             )
             try:
-                result = schema.model_validate(parse_json(raw))
+                result = schema.model_validate(parse_json(raw), extra="ignore")
                 self._validate_result(result, request, snapshot, parameters)
                 if isinstance(result, StructuredPresentation):
                     for slide in result.slides:

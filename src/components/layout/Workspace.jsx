@@ -9,6 +9,7 @@ import CodeMirrorEditor from '../editor/CodeMirrorEditor';
 import EditorToolbar from '../editor/EditorToolbar';
 import MarkdownPreview from '../editor/MarkdownPreview';
 import AIAgentPanel from '../editor/AIAgentPanel';
+import { useMarpConfig } from '../../context/MarpConfigContext';
 
 const SPLIT_RATIO_KEY = 'marp-split-ratio';
 
@@ -45,6 +46,7 @@ export function Workspace({
   generationError,
   sources,
 }) {
+  const { config } = useMarpConfig();
   const [splitRatio, setSplitRatio] = useState(() => Number(localStorage.getItem(SPLIT_RATIO_KEY)) || 0.68);
   const workspaceRef = useRef(null);
   const draggingRef = useRef(false);
@@ -89,7 +91,7 @@ export function Workspace({
         onAddSlide={onAddSlide}
         onDuplicateSlide={onDuplicateSlide}
         onDeleteSlide={onDeleteSlide}
-        onOpenAiModal={onOpenAiModal}
+        onOpenAiModal={config.featureFlags.aiAgent ? onOpenAiModal : undefined}
       />
 
       {/* Main Authoring Area */}
@@ -99,8 +101,10 @@ export function Workspace({
           <div
             className="flex flex-col h-full bg-white border-r border-slate-200/80 w-full"
           >
+            <EditorToolbar onFormat={onFormat} currentTheme={theme} onChangeTheme={onChangeTheme} />
             <div className="flex-1 relative overflow-hidden">
               <CodeMirrorEditor
+                readOnly={generationPending}
                 value={markdown}
                 onChange={onMarkdownChange}
                 onEditorReady={onEditorReady}
@@ -112,10 +116,10 @@ export function Workspace({
 
         {/* Split view is the visual canvas plus contextual agent. */}
         {viewMode === 'split' && (
-          <div ref={workspaceRef} className="split-workspace h-full flex flex-1 min-w-0" style={{ '--split-ratio': `${splitRatio * 100}%` }}>
+          <div ref={workspaceRef} className="split-workspace h-full flex flex-1 min-w-0" style={{ '--split-ratio': config.featureFlags.aiAgent ? `${splitRatio * 100}%` : '100%' }}>
             <div className="split-preview h-full min-w-0 border-r border-slate-200/80">
               <div className="split-design-toolbar sticky top-0 z-10">
-                <EditorToolbar onFormat={onFormat} currentTheme={theme} onChangeTheme={onChangeTheme} />
+                <EditorToolbar currentTheme={theme} onChangeTheme={onChangeTheme} />
               </div>
               <div className="split-canvas h-[calc(100%-48px)] min-h-0">
                 <MarkdownPreview
@@ -133,7 +137,7 @@ export function Workspace({
                 />
               </div>
             </div>
-            <button type="button" className="split-divider hidden md:block" aria-label="Resize presentation and controls" onPointerDown={startDragging} onDoubleClick={() => setSplitRatio(0.68)} />
+            {config.featureFlags.aiAgent && <><button type="button" className="split-divider hidden md:block" aria-label="Resize presentation and controls" onPointerDown={startDragging} onDoubleClick={() => setSplitRatio(0.68)} />
             <aside className="split-panel h-full shrink-0 hidden md:block">
               <AIAgentPanel
                 wsStatus={wsStatus}
@@ -144,7 +148,7 @@ export function Workspace({
                 generationError={generationError}
                 sources={sources}
               />
-            </aside>
+            </aside></>}
           </div>
         )}
 

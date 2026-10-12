@@ -72,6 +72,11 @@ class PresentationRead(PresentationListItem):
     markdown: str
 
 
+class PresentationExport(Input):
+    title: Name | None = None
+    markdown: Markdown | None = None
+
+
 class SlideCreate(Input):
     position: Position | None = None
     type: Annotated[str, Field(max_length=100)] | None = None

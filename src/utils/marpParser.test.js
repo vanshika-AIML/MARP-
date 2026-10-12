@@ -2,6 +2,23 @@ import { describe, expect, it } from 'vitest';
 import { parseMarpPresentation, rebuildPresentationMarkdown, splitFrontmatter } from './marpParser';
 
 describe('presentation Markdown helpers', () => {
+  it('does not split code fences or speaker comments into phantom slides', () => {
+    const parsed = parseMarpPresentation('# One\n```yaml\n---\n<!-- _class: lead -->\n```\n<!-- notes\n---\n-->\n---\n# Two\n~~~~\n---\n~~~~');
+    expect(parsed.slides).toHaveLength(2);
+    expect(parsed.slides[0].content).toContain('<!-- _class: lead -->');
+    expect(parsed.slides[0].directives.class).toBeUndefined();
+  });
+
+  it('inherits local directives and confines scoped directives to one slide', () => {
+    const { slides } = parseMarpPresentation('<!-- color: red -->\n# One\n---\n<!-- _color: blue -->\n<!-- _paginate: false -->\n# Two\n---\n# Three');
+    expect(slides.map((slide) => slide.directives.color)).toEqual(['red', 'blue', 'red']);
+    expect(slides[1].directives.paginate).toBe(false);
+  });
+
+  it('requires complete frontmatter delimiters', () => {
+    expect(splitFrontmatter('----\n# One\n---\n# Two').frontmatter).toBe('');
+    expect(splitFrontmatter('---\r\nmarp: true\r\n---\r\n# One').body).toBe('\r\n# One');
+  });
   it('inserts a duplicate immediately after the selected slide without duplicating frontmatter', () => {
     const markdown = '---\nmarp: true\ntheme: gaia\n---\n\n# One\n\n---\n\n# Two\n\n---\n\n# Three';
     const parsed = parseMarpPresentation(markdown);

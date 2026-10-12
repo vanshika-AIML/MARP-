@@ -36,3 +36,15 @@ it('honors an explicit slide composition without changing content', () => {
   const { container } = render(<SlideView slide={{ content: '## Two ideas\n- One\n- Two', directives: { _class: 'columns' } }} theme="editorial" />);
   expect(container.querySelector('.marp-theme-editorial.slide-layout-columns')).toBeInTheDocument();
 });
+
+it('keeps underscores in URLs and escapes inline code', () => {
+  const { container } = render(<SlideView slide={{ content: '[Link](https://example.org/a_b_c)\n\n`<div>**literal**</div>`\n\n~~~js\nconst ok = true;\n~~~' }} />);
+  expect(container.querySelector('a').getAttribute('href')).toBe('https://example.org/a_b_c');
+  expect(container.querySelector('code').textContent).toBe('<div>**literal**</div>');
+  expect(container.querySelector('pre code').textContent).toContain('const ok = true;');
+});
+
+it('renders generated split-image directives as a background image', () => {
+  const { container } = render(<SlideView slide={{ content: '![bg right:45% cover Diagram](https://example.org/image.png)\n\n## Diagram', directives: { class: 'image visual-split' } }} />);
+  expect(container.querySelector('.visual-split img.marp-bg-right').style.width).toBe('45%');
+});

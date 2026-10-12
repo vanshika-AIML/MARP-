@@ -72,6 +72,7 @@ def postgres_url():
             **os.environ,
             "DATABASE_URL": url,
             "APP_ENV": "test",
+            "DEBUG": "false",
             "DEPENDENCY_TIMEOUT_SECONDS": "10",
         }
         result = subprocess.run(

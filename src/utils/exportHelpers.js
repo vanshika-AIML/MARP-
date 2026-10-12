@@ -1,6 +1,10 @@
 /** Presentation Export Helpers (HTML, Markdown, PDF print, and downloads) */
 
-import { renderSlideMarkdownToHtml } from '../components/presentation/SlideView';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import SlideView from '../components/presentation/SlideView';
+
+const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 
 function safeFilename(filename = 'presentation') {
   return filename.replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'presentation';
@@ -32,18 +36,7 @@ export function downloadMarkdownFile(filename, content) {
 }
 
 function createSlideHtml(slide, theme, index) {
-  const directives = slide?.directives || {};
-  const currentTheme = directives.theme || theme || 'default';
-  const classes = ['marp-slide-wrapper', `marp-theme-${currentTheme}`];
-  if ((directives._class || directives.class || '').includes('lead')) classes.push('slide-lead');
-  if ((directives._class || directives.class || '').includes('invert')) classes.push('slide-invert');
-  const styles = [
-    directives._backgroundColor || directives.backgroundColor ? `background-color:${directives._backgroundColor || directives.backgroundColor}` : '',
-    directives._color || directives.color ? `color:${directives._color || directives.color}` : '',
-  ].filter(Boolean).join(';');
-  const footer = directives.footer || '';
-  const pageNumber = directives.paginate !== false ? `<div>${index + 1}</div>` : '';
-  return `<div class="${classes.join(' ')}"${styles ? ` style="${styles}"` : ''}>${directives.header ? `<div class="marp-slide-header">${directives.header}</div>` : ''}<div class="marp-slide-content">${renderSlideMarkdownToHtml(slide?.content || '')}</div>${footer || pageNumber ? `<div class="marp-slide-footer"><div>${footer}</div>${pageNumber}</div>` : ''}</div>`;
+  return `<section class="slide-page">${renderToStaticMarkup(createElement(SlideView, { slide: { ...slide, index }, theme }))}</section>`;
 }
 
 export function createPresentationHtml(title, slides, theme = 'default') {
@@ -53,9 +46,11 @@ export function createPresentationHtml(title, slides, theme = 'default') {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title || 'MARP Presentation'}</title>
+  <title>${escapeHtml(title || 'MARP Presentation')}</title>
   <style>
-    ${getDocumentStyles()}
+    ${getDocumentStyles().replace(/<\/style/gi, '&lt;/style')}
+    @page { size: 13.333333in 7.5in; margin: 0; }
+    .marp-slide-wrapper { width: 100%; height: 100%; animation: none !important; }
     body {
       margin: 0;
       padding: 0;
@@ -83,12 +78,15 @@ export function createPresentationHtml(title, slides, theme = 'default') {
         gap: 0;
       }
       .slide-page {
-        width: 100vw;
-        height: 100vh;
+        width: 13.333333in;
+        height: 7.5in;
         page-break-after: always;
+        break-inside: avoid;
+        print-color-adjust: exact;
         box-shadow: none;
         border-radius: 0;
       }
+      .slide-page:last-child { page-break-after: auto; }
     }
   </style>
 </head>
@@ -105,15 +103,18 @@ export function downloadHtmlPresentation(title, slides, theme = 'default') {
 }
 
 export function triggerPrintToPdf(title, slides, theme = 'default') {
-  const printWindow = window.open('', '_blank', 'noopener,noreferrer');
+  const printWindow = window.open('', '_blank');
   if (!printWindow) throw new Error('Allow pop-ups to print the presentation.');
+  printWindow.opener = null;
   printWindow.document.open();
-  printWindow.document.write(createPresentationHtml(title, slides, theme));
-  printWindow.document.close();
-  printWindow.addEventListener('load', () => {
+  printWindow.addEventListener('load', async () => {
+    await printWindow.document.fonts?.ready;
+    await Promise.all(Array.from(printWindow.document.images, (img) => img.decode?.().catch(() => {})));
     printWindow.focus();
     printWindow.print();
   }, { once: true });
+  printWindow.document.write(createPresentationHtml(title, slides, theme));
+  printWindow.document.close();
 }
 
 export async function downloadExportResult(result, filename, format) {

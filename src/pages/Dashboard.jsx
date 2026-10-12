@@ -17,7 +17,7 @@ const sections = [
 ];
 export default function Dashboard({ onOpenDeck, onNewDeckWithTemplate }) {
   const { config } = useMarpConfig();
-  const [tab, setTab] = useState('home');
+  const [requestedTab, setTab] = useState(null);
   const [collapsed, setCollapsed] = useState(() => window.matchMedia?.('(max-width: 760px)').matches || false);
   const [presentations, setPresentations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,20 +33,21 @@ export default function Dashboard({ onOpenDeck, onNewDeckWithTemplate }) {
   };
   useEffect(() => { fetchDecks(); }, []);
   const run = async (id, action) => { if (busy) return; setBusy(id); setError(''); try { await action(); } catch (err) { setError(err.message || 'Please try again.'); } finally { setBusy(null); } };
-  const duplicate = (deck) => run(deck.id, async () => { await presentationService.createPresentation({ title: `${deck.title} (Copy)`, markdown: deck.markdown }); await fetchDecks(); });
+  const duplicate = (deck) => run(deck.id, async () => { await presentationService.createPresentation({ title: `${deck.title.slice(0, 193)} (Copy)`, markdown: deck.markdown, description: deck.description, theme_id: deck.theme_id }); await fetchDecks(); });
   const remove = (deck) => { if (window.confirm(`Delete ${deck.title}?`)) run(deck.id, async () => { await presentationService.deletePresentation(deck.id); await fetchDecks(); }); };
   const onTabKey = (event, index) => {
     let next;
     if (event.key === 'ArrowDown' || event.key === 'ArrowRight') next = (index + 1) % configuredSections.length;
     if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') next = (index + configuredSections.length - 1) % configuredSections.length;
     if (event.key === 'Home') next = 0;
-    if (event.key === 'End') next = sections.length - 1;
+    if (event.key === 'End') next = configuredSections.length - 1;
     if (next !== undefined) { event.preventDefault(); setTab(configuredSections[next][0]); tabRefs.current[next]?.focus(); }
   };
   const configuredSections = sections.map(([id, Icon, fallbackLabel, fallbackDescription]) => [id, Icon, config.dashboard.labels[id] || fallbackLabel, config.dashboard.descriptions[id] || fallbackDescription]).filter(([id]) => config.dashboard.visibleSections[id] && (id === 'templates' ? config.featureFlags.exploreTemplates : id === 'ai' ? config.featureFlags.createWithAI : id === 'upload' ? config.featureFlags.uploadTemplate : true)).sort((a, b) => config.dashboard.sectionOrder.indexOf(a[0]) - config.dashboard.sectionOrder.indexOf(b[0]));
-  const active = configuredSections.find(([id]) => tab === id) || configuredSections[0];
+  if (!configuredSections.length) configuredSections.push(sections[0]);
+  const active = configuredSections.find(([id]) => (requestedTab || config.dashboard.defaultSection) === id) || configuredSections[0];
+  const tab = active[0];
   const filtered = presentations.filter((deck) => deck.title?.toLowerCase().includes(query.toLowerCase()));
-  useEffect(() => { if (!config.dashboard.visibleSections[tab]) setTab(config.dashboard.defaultSection); }, [config.dashboard.defaultSection, config.dashboard.visibleSections, tab]);
   return <div className="dashboard-app"><SiteHeader /><div className={`dashboard-layout ${collapsed ? 'sidebar-collapsed' : ''}`}>
     <aside className="dashboard-sidebar" aria-label="Dashboard sidebar"><div className="sidebar-top"><span className="sidebar-label eyebrow">Workspace</span><button onClick={() => setCollapsed(!collapsed)} aria-expanded={!collapsed} aria-controls="dashboard-tabs" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>{collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}</button></div>
       <nav id="dashboard-tabs" role="tablist" aria-label="Dashboard sections" aria-orientation="vertical">{configuredSections.map(([id, Icon, label], i) => <button key={id} ref={(element) => { tabRefs.current[i] = element; }} role="tab" id={`tab-${id}`} aria-controls={`panel-${id}`} aria-selected={tab === id} tabIndex={tab === id ? 0 : -1} onKeyDown={(event) => onTabKey(event, i)} onClick={() => setTab(id)} title={label}><Icon size={20} /><span className="sidebar-label">{label}</span></button>)}</nav>

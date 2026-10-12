@@ -37,9 +37,34 @@ VITE_WS_BASE_URL=ws://localhost:8000
 
 ### 3. Run Development Server
 
+Presentation creation requires the API and PostgreSQL. AI generation and source
+processing also require Redis and the worker. Starting Vite alone does not start
+these services.
+
+From this repository directory (`MARP-`), with Docker Desktop running and Python
+3.12 / uv installed:
+
+```powershell
+Copy-Item backend/.env.example backend/.env # First setup only; keep existing keys
+uv sync --project backend
+npm run dev:all
+```
+
+`dev:all` starts local PostgreSQL/Redis, applies migrations, seeds starter templates,
+and runs the API, worker, and Vite. Ctrl+C stops the application processes; Docker
+keeps the database running. If Windows reserves port 5432, set the database port
+in `backend/.env` to `55432`; the launcher maps Docker to the same port.
+
+For a frontend-only server when the backend is already running:
+
 ```bash
 npm run dev
 ```
+
+Vite proxies `/api/v1` HTTP and WebSocket requests to `127.0.0.1:8000` by default.
+The frontend environment file is optional for local development. NVIDIA credentials
+go only in `backend/.env`; enable `createWithAI` and `aiAgent` in administration
+after configuring the provider. Markdown/template creation needs no AI key.
 
 Visit [http://localhost:5173](http://localhost:5173) in your browser.
 

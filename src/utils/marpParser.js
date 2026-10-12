@@ -21,7 +21,7 @@ export function parseMarpPresentation(rawMarkdown = '') {
     };
   }
 
-  const lines = rawMarkdown.split(/\r?\n/);
+  const lines = rawMarkdown.replace(/^\uFEFF/, '').split(/\r?\n/);
   let globalDirectives = { theme: 'default', paginate: false, marp: true };
   let startIndex = 0;
 
@@ -46,10 +46,24 @@ export function parseMarpPresentation(rawMarkdown = '') {
   const slides = [];
   let currentSlideLines = [];
   let currentStartLine = startIndex + 1;
+  let fence = null;
+  let inComment = false;
+  let inheritedDirectives = { ...globalDirectives };
+  const resolveDirectives = (directives) => {
+    for (const [key, value] of Object.entries(directives)) {
+      if (!key.startsWith('_')) inheritedDirectives[key] = value;
+    }
+    return { ...inheritedDirectives, ...Object.fromEntries(Object.entries(directives).map(([key, value]) => [key.replace(/^_/, ''), value])) };
+  };
 
   for (let i = startIndex; i < lines.length; i++) {
     const line = lines[i];
-    const isSlideBreak = line.trim() === '---';
+    const marker = !inComment && line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    const isSlideBreak = !fence && !inComment && /^ {0,3}---[ \t]*$/.test(line);
+    if (fence) {
+      if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && !marker[2].trim()) fence = null;
+    } else if (marker) fence = marker[1];
+    else for (const token of line.match(/<!--|-->/g) || []) inComment = token === '<!--';
 
     if (isSlideBreak) {
       // Finalize preceding slide
@@ -60,7 +74,7 @@ export function parseMarpPresentation(rawMarkdown = '') {
         index: slides.length,
         raw: slideRaw,
         content,
-        directives: { ...globalDirectives, ...directives },
+        directives: resolveDirectives(directives),
         startLine: currentStartLine,
         endLine: Math.max(currentStartLine, i),
       });
@@ -83,7 +97,7 @@ export function parseMarpPresentation(rawMarkdown = '') {
     index: slides.length,
     raw: lastSlideRaw,
     content: lastContent,
-    directives: { ...globalDirectives, ...lastDirectives },
+    directives: resolveDirectives(lastDirectives),
     startLine: currentStartLine,
     endLine: Math.max(currentStartLine, lines.length),
   });
@@ -141,10 +155,17 @@ export function parseSlideDirectives(rawSlideText) {
   const lines = rawSlideText.split(/\r?\n/);
   const directives = {};
   const cleanedLines = [];
+  let fence = null;
 
   const directiveRegex = /<!--\s*(_?[a-zA-Z0-9_-]+)\s*:\s*(.+?)\s*-->/;
 
   for (const line of lines) {
+    const marker = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (fence || marker) {
+      if (fence && marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && !marker[2].trim()) fence = null;
+      else if (!fence && marker) fence = marker[1];
+      cleanedLines.push(line); continue;
+    }
     const match = line.match(directiveRegex);
     if (match) {
       const key = match[1].trim();
@@ -185,10 +206,9 @@ export function getSlideIndexForLine(slides, lineNumber) {
 }
 
 export function splitFrontmatter(markdown = '') {
-  if (!markdown.startsWith('---')) return { frontmatter: '', body: markdown };
-  const end = markdown.indexOf('\n---', 3);
-  if (end === -1) return { frontmatter: '', body: markdown };
-  const separatorEnd = end + 4;
+  const match = markdown.match(/^\uFEFF?---[ \t]*\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)[ \t]*(?=\r?\n|$)/);
+  if (!match) return { frontmatter: '', body: markdown };
+  const separatorEnd = match[0].length;
   return {
     frontmatter: markdown.slice(0, separatorEnd),
     body: markdown.slice(separatorEnd),

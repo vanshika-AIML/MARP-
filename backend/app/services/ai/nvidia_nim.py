@@ -66,7 +66,16 @@ class NvidiaNIMClient:
             "Accept": "text/event-stream" if stream else "application/json",
         }
 
-    def _payload(self, messages, temperature, max_tokens, *, stream=False, json_output=True):
+    def _payload(
+        self,
+        messages,
+        temperature,
+        max_tokens,
+        *,
+        stream=False,
+        json_output=True,
+        enable_thinking=None,
+    ):
         payload = {
             "model": self.settings.nvidia_model,
             "messages": messages,
@@ -78,6 +87,8 @@ class NvidiaNIMClient:
         # Structured schemas are always sent in prompts and validated by the service.
         if json_output and self.settings.nvidia_json_mode:
             payload["response_format"] = {"type": "json_object"}
+        if enable_thinking is not None:
+            payload["chat_template_kwargs"] = {"enable_thinking": enable_thinking}
         return payload
 
     async def _backoff(self, attempt, retry_after=None):
@@ -125,7 +136,13 @@ class NvidiaNIMClient:
         try:
             async with asyncio.timeout(timeout_seconds):
                 response = await self._request(
-                    self._payload(messages, temperature, max_tokens, json_output=json_output),
+                    self._payload(
+                        messages,
+                        temperature,
+                        max_tokens,
+                        json_output=json_output,
+                        enable_thinking=False,
+                    ),
                     timeout_seconds,
                 )
         except TimeoutError:
@@ -159,10 +176,13 @@ class NvidiaNIMClient:
         """Future streaming adapter; never replay a stream after yielding tokens."""
         # Per-call diagnostic overrides; normal streaming/generation defaults stay intact.
         payload = self._payload(
-            messages, temperature, max_tokens, stream=True, json_output=False
+            messages,
+            temperature,
+            max_tokens,
+            stream=True,
+            json_output=False,
+            enable_thinking=enable_thinking,
         )
-        if enable_thinking is not None:
-            payload["chat_template_kwargs"] = {"enable_thinking": enable_thinking}
         request_options = {"timeout": http_timeout} if http_timeout is not None else {}
         deadline = (
             self.settings.ai_timeout_seconds

@@ -1,13 +1,16 @@
 import agentService, { actionName } from './agentService';
 import { subscribeResource } from './realtimeService';
+import { readMarpConfig } from '../config/marpConfig';
 
 export function watchJob(id, { signal, onEvent, onStatus } = {}) {
   return new Promise((resolve, reject) => {
     let done = false;
+    let pollTimer;
     let close = () => {};
     const finish = (error, result) => {
       if (done) return;
       done = true;
+      clearTimeout(pollTimer);
       close();
       signal?.removeEventListener('abort', abort);
       if (error) reject(error); else resolve(result);
@@ -19,7 +22,7 @@ export function watchJob(id, { signal, onEvent, onStatus } = {}) {
         if (job.status === 'completed' && job.result) finish(null, job.result);
         else if (job.status === 'cancelled') finish(new Error('Generation cancelled.'));
         else if (job.status === 'failed') finish(new Error(job.error?.message || 'Generation failed. Please retry.'));
-        else finish(new Error('Live connection was lost. Reconnect to this job to continue.'));
+        else if (!done) pollTimer = setTimeout(readResult, 2000);
       } catch (error) { finish(error); }
     };
     if (signal?.aborted) { abort(); return; }
@@ -37,7 +40,7 @@ export function watchJob(id, { signal, onEvent, onStatus } = {}) {
 
 export async function generatePresentation(prompt, generationType = 'slide', context = {}) {
   const { signal, onEvent, onStatus, onJob, ...fields } = context;
-  const accepted = await agentService.createJob({ ...fields, prompt, action: actionName(generationType) }, { signal });
+  const accepted = await agentService.createJob({ ...fields, prompt, options: { theme: readMarpConfig().ai.defaultTheme || 'default', ...fields.options }, action: actionName(generationType) }, { signal });
   onJob?.(accepted.job_id);
   return watchJob(accepted.job_id, { signal, onEvent, onStatus });
 }

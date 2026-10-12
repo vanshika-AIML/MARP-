@@ -48,6 +48,6 @@ export const THEME_REGISTRY = [
 
 export const getTheme = (id) => {
   const base = THEME_REGISTRY.find((theme) => theme.id === id) || THEME_REGISTRY[0];
-  const configured = readMarpConfig().themes?.find((theme) => theme.id === base.id && theme.active !== false);
+  const configured = readMarpConfig().themes?.find((theme) => theme.id === id && theme.active !== false);
   return configured ? { ...base, ...configured, colors: { ...base.colors, ...configured.colors }, fonts: { ...base.fonts, ...configured.fonts } } : base;
 };

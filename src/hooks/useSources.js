@@ -6,7 +6,8 @@ export default function useSources() {
   const [sources, setSources] = useState([]);
   const [error, setError] = useState('');
   const sockets = useRef(new Map());
-  useEffect(() => () => { for (const close of sockets.current.values()) close(); sockets.current.clear(); }, []);
+  const mounted = useRef(true);
+  useEffect(() => { const connections = sockets.current; mounted.current = true; return () => { mounted.current = false; for (const close of connections.values()) close(); connections.clear(); }; }, []);
 
   const update = useCallback((id, values) => {
     setSources((current) => current.map((source) => source.id === id ? { ...source, ...values } : source));
@@ -22,8 +23,24 @@ export default function useSources() {
           sockets.current.delete(id);
         }
       },
-      onExhausted: async () => {
-        try { update(id, await uploadService.get(id)); } catch (reason) { setError(reason.message); }
+      onExhausted: () => {
+        let stopped = false;
+        let timer;
+        sockets.current.set(id, () => { stopped = true; clearTimeout(timer); });
+        const poll = async () => {
+          try {
+            const source = await uploadService.get(id);
+            if (stopped || !mounted.current) return;
+            update(id, source);
+            if (['ready', 'failed', 'deleted'].includes(source.status)) sockets.current.delete(id);
+            else timer = setTimeout(poll, 2000);
+          } catch (reason) {
+            if (stopped || !mounted.current) return;
+            setError(reason.message);
+            timer = setTimeout(poll, 5000);
+          }
+        };
+        poll();
       },
     });
     sockets.current.set(id, close);
@@ -36,6 +53,7 @@ export default function useSources() {
       setSources((current) => [...current, { id: temporaryId, original_filename: file.name, status: 'uploading', progress: 0 }]);
       try {
         const accepted = await uploadService.upload(file);
+        if (!mounted.current) return;
         setSources((current) => current.map((source) => source.id === temporaryId ? { ...source, id: accepted.source_id, status: accepted.status, progress: 5 } : source));
         watch(accepted.source_id);
       } catch (reason) {
@@ -45,10 +63,12 @@ export default function useSources() {
   }, [update, watch]);
 
   const remove = useCallback(async (id) => {
+    try {
+    if (!id.startsWith('upload-')) await uploadService.delete(id);
     sockets.current.get(id)?.();
     sockets.current.delete(id);
-    if (!id.startsWith('upload-')) await uploadService.delete(id);
     setSources((current) => current.filter((source) => source.id !== id));
+    } catch (reason) { setError(reason.message); }
   }, []);
 
   const readyIds = sources.filter((source) => source.status === 'ready').map((source) => source.id);

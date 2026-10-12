@@ -31,6 +31,15 @@ class FakeQueue:
         self.events.append(json.loads(payload))
 
 
+def streaming_response(content):
+    chunks = [content[start : start + 128] for start in range(0, len(content), 128)]
+    events = [
+        "data: " + json.dumps({"choices": [{"delta": {"content": chunk}}]}) + "\n\n"
+        for chunk in chunks
+    ]
+    return httpx.Response(200, text="".join(events) + "data: [DONE]\n\n")
+
+
 @pytest.fixture
 async def jobs(client, sessions, settings):
     queue = FakeQueue()
@@ -44,14 +53,20 @@ async def jobs(client, sessions, settings):
         if state["failure"]:
             return httpx.Response(state["failure"], text="private NVIDIA error")
         if state.get("malformed"):
-            return httpx.Response(200, json={"choices": [{"message": {"content": "invalid JSON"}}]})
+            content = "invalid JSON"
+            if json.loads(request.content).get("stream"):
+                return streaming_response(content)
+            return httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
         content = {
             "title": "Worker deck",
             "theme": "minimal",
             "slides": [{"title": "First", "content": ["Real generated content"]}],
         }
+        response_content = json.dumps(content)
+        if json.loads(request.content).get("stream"):
+            return streaming_response(response_content)
         return httpx.Response(
-            200, json={"choices": [{"message": {"content": json.dumps(content)}}]}
+            200, json={"choices": [{"message": {"content": response_content}}]}
         )
 
     nim = NvidiaNIMClient(
@@ -106,6 +121,10 @@ async def test_job_create_lookup_worker_persistence_and_duplicate(client, sessio
     events = [event["event"] for event in queue.events]
     assert events[0] == "job.queued" and events[-1] == "job.completed"
     assert "job.started" in events and "slide.completed" in events
+    assert any(
+        event["event"] == "prompt.analysis" and event["progress"] > 20
+        for event in queue.events
+    )
     assert "slide.delta" not in events and "slide.started" not in events
     assert (await client.post(f"/ai/jobs/{job_id}/cancel")).json()["status"] == "completed"
 

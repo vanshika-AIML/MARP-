@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { ArrowDown, ArrowUpRight, CircleDot, Network, PanelsTopLeft, Presentation } from 'lucide-react';
 import SiteHeader from '../components/landing/SiteHeader';
 import FeatureTour from '../components/landing/FeatureTour';
@@ -71,6 +71,7 @@ export default function Landing({ onCreate }) {
     finally { setPending(false); }
   };
 
+  if (!config.landing.visible) return <Navigate to="/dashboard" replace />;
   return <main className="landing-shell"><SiteHeader />
     <section ref={heroRef} className="landing-hero">
       <div className="hero-ambient" aria-hidden="true">
@@ -125,7 +126,7 @@ export default function Landing({ onCreate }) {
       </div>
     </section>
     {config.landing.featureTourVisible && config.featureFlags.learnWithVideo && <FeatureTour />}
-    {config.landing.aiSectionVisible && <div ref={aiRef} className={`landing-section landing-ai-section ${aiVisible ? 'is-visible' : ''}`} id="create-ai"><CreateWithAI onCreate={onCreate} /></div>}
+    {config.landing.aiSectionVisible && config.featureFlags.createWithAI && <div ref={aiRef} className={`landing-section landing-ai-section ${aiVisible ? 'is-visible' : ''}`} id="create-ai"><CreateWithAI onCreate={onCreate} /></div>}
     {config.landing.footerVisible && <footer ref={footerRef} className={`landing-footer ${footerVisible ? 'is-visible' : ''}`}><span>{config.site.productName} — {config.site.footer}</span><Link to="/dashboard">Open your dashboard <ArrowUpRight size={15} /></Link></footer>}
   </main>;
 }

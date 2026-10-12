@@ -87,12 +87,12 @@ CONFIG = {
 }
 FLAGS = {
     "create_with_ai": False,
-    "upload_template": False,
+    "upload_template": True,
     "explore_templates": True,
     "learn_with_video": True,
     "ai_agent": False,
     "custom_themes": True,
-    "exports": False,
+    "exports": True,
     "animations": True,
 }
 

@@ -1,6 +1,7 @@
 """Run: uv run arq app.workers.settings.WorkerSettings."""
 
 import logging
+import sys
 from datetime import UTC, datetime, timedelta
 
 from arq import cron
@@ -80,6 +81,7 @@ async def shutdown(ctx):
 
 
 class WorkerSettings:
+    handle_signals = sys.platform != "win32"
     functions = [generate_job, ingest_source]
     cron_jobs = [cron(recover_jobs, minute=set(range(0, 60, 1)), run_at_startup=True)]
     redis_settings = worker_redis_settings(Settings())

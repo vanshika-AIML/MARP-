@@ -48,8 +48,9 @@ async def test_nim_contract_and_transient_retry(settings):
         assert len(calls) == 2
         assert str(calls[0].url) == "https://integrate.api.nvidia.com/v1/chat/completions"
         payload = json.loads(calls[0].content)
-        assert payload["model"] == "nvidia/nemotron-3-nano-30b-a3b"
+        assert payload["model"] == "nvidia/nemotron-3-super-120b-a12b"
         assert payload["stream"] is False
+        assert payload["chat_template_kwargs"] == {"enable_thinking": False}
         assert "response_format" not in payload
     finally:
         await client.close()

@@ -34,6 +34,9 @@ export const presentationService = {
   updateSlide(id, data) { return api.patch(`/slides/${encodeURIComponent(id)}`, data); },
   deleteSlide(id) { return api.delete(`/slides/${encodeURIComponent(id)}`); },
   reorderSlides(id, slideIds) { return api.post(`/presentations/${encodeURIComponent(id)}/slides/reorder`, { slide_ids: slideIds }); },
-  async exportPresentation() { throw new Error('PowerPoint export is not available in this backend. Choose Markdown, HTML, or Print / PDF.'); },
+  exportPresentation(id, format, data = {}) {
+    if (format !== 'pptx') throw new Error('Unsupported export format.');
+    return api.post(`/presentations/${encodeURIComponent(id)}/export/pptx`, data, { responseType: 'blob', timeoutMs: 60000 });
+  },
 };
 export default presentationService;
